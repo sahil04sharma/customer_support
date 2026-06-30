@@ -1,0 +1,135 @@
+// prisma/schema.prisma
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ─── BUSINESS (tenant) ───────────────────────────────────────────
+model Business {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  password     String
+  widgetKey    String   @unique @default(cuid()) // used to identify which business the widget belongs to
+  plan         Plan     @default(FREE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agents        Agent[]
+  documents     Document[]
+  conversations Conversation[]
+  settings      BusinessSettings?
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+// ─── BUSINESS SETTINGS ───────────────────────────────────────────
+model BusinessSettings {
+  id                  String   @id @default(cuid())
+  businessId          String   @unique
+  widgetColor         String   @default("#1a56db")
+  widgetPosition      String   @default("bottom-right")
+  welcomeMessage      String   @default("Hi! How can I help you today?")
+  agentName           String   @default("Support Assistant")
+  confidenceThreshold Float    @default(0.7) // below this score, escalate to human
+  business            Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+// ─── SUPPORT AGENT (employee of business) ────────────────────────
+model Agent {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  email      String   @unique
+  password   String
+  isOnline   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+}
+
+// ─── DOCUMENT (uploaded by business) ─────────────────────────────
+model Document {
+  id         String         @id @default(cuid())
+  businessId String
+  name       String
+  fileUrl    String         // Cloudinary URL
+  status     DocumentStatus @default(PROCESSING)
+  createdAt  DateTime       @default(now())
+
+  business Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  chunks   DocumentChunk[]
+}
+
+enum DocumentStatus {
+  PROCESSING // being chunked and embedded
+  READY      // embeddings stored, ready for search
+  FAILED     // processing failed
+}
+
+// ─── DOCUMENT CHUNK (RAG) ────────────────────────────────────────
+model DocumentChunk {
+  id         String                     @id @default(cuid())
+  documentId String
+  businessId String                     // denormalized for faster search
+  content    String                     // raw text of this chunk
+  embedding  Unsupported("vector(768)") // pgvector column (Gemini = 768 dimensions)
+  chunkIndex Int                        // order of chunk in original document
+  createdAt  DateTime                   @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+// ─── CONVERSATION ─────────────────────────────────────────────────
+model Conversation {
+  id            String             @id @default(cuid())
+  businessId    String
+  agentId       String? // null until escalated
+  customerName  String?
+  customerEmail String?
+  status        ConversationStatus @default(OPEN)
+  handedOff     Boolean            @default(false) // true when AI escalated to human
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  agent    Agent?    @relation(fields: [agentId], references: [id])
+  messages Message[]
+}
+
+enum ConversationStatus {
+  OPEN
+  RESOLVED
+  ESCALATED
+}
+
+// ─── MESSAGE ──────────────────────────────────────────────────────
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole // CUSTOMER, AI, AGENT
+  content        String
+  confidence     Float? // AI confidence score (null for human messages)
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+enum MessageRole {
+  CUSTOMER
+  AI
+  AGENT
+}
