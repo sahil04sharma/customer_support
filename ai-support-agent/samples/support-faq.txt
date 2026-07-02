@@ -1,0 +1,61 @@
+SUPPORTDESK — CUSTOMER SUPPORT KNOWLEDGE BASE
+Last updated: June 2026
+
+================================================================================
+1. ABOUT SUPPORTDESK
+================================================================================
+
+SupportDesk is an AI-powered customer support platform for small and medium
+businesses. Businesses upload their help documents, embed a chat widget on
+their website, and customers get instant answers 24/7.
+
+Plans:
+- Starter: $29/month — 1,000 AI conversations, 1 agent seat
+- Pro: $79/month — 5,000 AI conversations, 5 agent seats
+- Enterprise: Custom pricing — unlimited conversations, SSO
+
+All plans include a 14-day free trial. No credit card required to start.
+
+================================================================================
+2. PASSWORD RESET
+================================================================================
+
+1. Go to the login page and click "Forgot password?"
+2. Enter your email address
+3. Check your inbox for a reset link (valid for 1 hour)
+4. Create a new password (minimum 8 characters, at least one number)
+
+If you do not receive the email within 5 minutes, check spam or contact
+support@supportdesk.io.
+
+================================================================================
+3. RETURNS & REFUNDS
+================================================================================
+
+Return window: 30 days from delivery for unused items in original packaging.
+
+Non-returnable: Digital downloads, personalized products, perishable goods.
+
+How to start a return:
+1. Email returns@yourstore.com with your order number
+2. Receive a return authorization (RA) number within 2 business days
+3. Ship the item back with the RA number on the package
+4. Refund processed within 5–7 business days after we receive the item
+
+================================================================================
+4. SHIPPING
+================================================================================
+
+Standard shipping: 5–7 business days — $5.99 (free over $50)
+Express shipping: 2–3 business days — $14.99
+Overnight: Next business day — $24.99 (order before 2 PM EST)
+
+================================================================================
+5. BUSINESS HOURS
+================================================================================
+
+Human support: Monday–Friday, 9:00 AM – 6:00 PM Eastern Time
+Weekends: Closed (AI widget available 24/7)
+
+Email: support@supportdesk.io
+Phone: +1 (555) 123-4567 (Enterprise only)

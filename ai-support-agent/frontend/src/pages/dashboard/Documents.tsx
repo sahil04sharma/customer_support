@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { FileText, Trash2, Upload } from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
+import Badge from '../../components/ui/Badge';
+import EmptyState from '../../components/ui/EmptyState';
 import { api } from '../../lib/api';
 
 interface Document {
@@ -8,6 +12,12 @@ interface Document {
   status: 'PROCESSING' | 'READY' | 'FAILED';
   createdAt: string;
 }
+
+const statusVariant = {
+  PROCESSING: 'warning' as const,
+  READY: 'success' as const,
+  FAILED: 'error' as const,
+};
 
 export default function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -43,10 +53,7 @@ export default function Documents() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'text/plain': ['.txt'],
-    },
+    accept: { 'application/pdf': ['.pdf'], 'text/plain': ['.txt'] },
     multiple: false,
   });
 
@@ -55,63 +62,98 @@ export default function Documents() {
     fetchDocuments();
   }
 
-  const statusColor = {
-    PROCESSING: 'text-yellow-600 bg-yellow-50',
-    READY: 'text-green-600 bg-green-50',
-    FAILED: 'text-red-600 bg-red-50',
-  };
-
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Documents</h2>
+      <PageHeader
+        title="Knowledge base"
+        description="Upload documents your AI uses to answer customers — FAQs, return policies, product guides, and more."
+      />
+
+      <div className="mb-6 rounded-xl border border-blue-200/60 bg-blue-50/50 px-5 py-4">
+        <p className="text-sm font-medium text-blue-900">What to upload</p>
+        <p className="mt-1 text-sm leading-relaxed text-blue-800/80">
+          PDF or TXT files with your support content. You can upload multiple files — the AI
+          searches all of them. File names don&apos;t matter; only the text inside is used.
+        </p>
+      </div>
+
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-12 text-center mb-8 cursor-pointer ${
-          isDragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-300'
+        className={`mb-8 cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
+          isDragActive
+            ? 'border-zinc-900 bg-zinc-50'
+            : 'border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50'
         }`}
       >
         <input {...getInputProps()} />
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100">
+          <Upload className="h-5 w-5 text-zinc-500" />
+        </div>
         {uploading ? (
-          <p>Uploading...</p>
+          <p className="text-sm font-medium text-zinc-600">Uploading and processing…</p>
         ) : (
-          <p className="text-slate-500">
-            Drag & drop a PDF or TXT file here, or click to select
-          </p>
+          <>
+            <p className="text-sm font-medium text-zinc-900">
+              Drop a PDF or TXT file here, or click to browse
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">Max 10 MB per file</p>
+          </>
         )}
       </div>
-      <table className="w-full bg-white rounded-xl border overflow-hidden">
-        <thead className="bg-slate-50 text-left text-sm text-slate-500">
-          <tr>
-            <th className="px-4 py-3">Name</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Uploaded</th>
-            <th className="px-4 py-3"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {documents.map((doc) => (
-            <tr key={doc.id} className="border-t">
-              <td className="px-4 py-3">{doc.name}</td>
-              <td className="px-4 py-3">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[doc.status]}`}>
-                  {doc.status}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-sm text-slate-500">
-                {new Date(doc.createdAt).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  className="text-red-600 text-sm hover:text-red-700"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      {documents.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="No documents yet"
+          description="Upload your first FAQ or policy document to train your AI assistant."
+        />
+      ) : (
+        <div className="card overflow-hidden">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-zinc-100 bg-zinc-50/80">
+                <th className="px-5 py-3.5 font-medium text-zinc-500">File</th>
+                <th className="px-5 py-3.5 font-medium text-zinc-500">Status</th>
+                <th className="px-5 py-3.5 font-medium text-zinc-500">Uploaded</th>
+                <th className="px-5 py-3.5" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {documents.map((doc) => (
+                <tr key={doc.id} className="group hover:bg-zinc-50/50">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100">
+                        <FileText className="h-4 w-4 text-zinc-500" />
+                      </div>
+                      <span className="font-medium text-zinc-900">{doc.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <Badge variant={statusVariant[doc.status]}>{doc.status}</Badge>
+                  </td>
+                  <td className="px-5 py-4 text-zinc-500">
+                    {new Date(doc.createdAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      onClick={() => handleDelete(doc.id)}
+                      className="rounded-lg p-2 text-zinc-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                      aria-label="Delete document"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

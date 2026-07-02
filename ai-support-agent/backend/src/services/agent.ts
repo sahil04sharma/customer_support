@@ -63,15 +63,20 @@ ${context}`;
 
   const answer = response.choices[0].message.content ?? '';
 
-  const needsEscalation =
-    topSimilarity < confidenceThreshold ||
-    answer.includes('human agent') ||
-    answer.includes('connect you with');
+  // Only escalate when the AI explicitly can't help or there is no useful KB match.
+  // Do NOT escalate just because similarity is below threshold when the AI already
+  // answered from context (common with embedding score variance).
+  const explicitHandoff = /i need to connect you with a human agent/i.test(answer);
+  const noUsefulContext =
+    relevantChunks.length === 0 || topSimilarity < 0.35;
+
+  const shouldEscalate =
+    explicitHandoff || (noUsefulContext && topSimilarity < confidenceThreshold);
 
   return {
     answer,
     confidence: topSimilarity,
-    shouldEscalate: needsEscalation,
+    shouldEscalate,
     sources: relevantChunks.map((c) => c.content.slice(0, 100)),
   };
 }

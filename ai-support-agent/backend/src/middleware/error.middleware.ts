@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
+import multer from 'multer';
 import { ZodError } from 'zod';
+import { env } from '../config/env';
+import { logError } from '../utils/safeLog';
 
 /**
  * Application error with an HTTP status code. Throw this from anywhere in a
@@ -31,11 +34,27 @@ export function errorHandler(
     return;
   }
 
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({ error: 'File too large. Maximum size is 10 MB.' });
+      return;
+    }
+    res.status(400).json({ error: 'Upload failed. Please try a smaller PDF or TXT file.' });
+    return;
+  }
+
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ error: err.message });
     return;
   }
 
-  console.error('[error]', err);
-  res.status(500).json({ error: 'Internal server error' });
+  if (err instanceof Error && err.message.includes('not allowed by CORS')) {
+    res.status(403).json({ error: 'Origin not allowed' });
+    return;
+  }
+
+  logError('error', err);
+  res.status(500).json({
+    error: env.isProduction ? 'Internal server error' : 'Internal server error',
+  });
 }

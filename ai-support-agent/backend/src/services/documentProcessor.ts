@@ -2,6 +2,7 @@ import cuid from 'cuid';
 import { prisma } from '../lib/prisma';
 import { chunkText } from './chunker';
 import { generateEmbedding } from './embeddings';
+import { logError } from '../utils/safeLog';
 
 export async function processDocument(
   documentId: string,
@@ -37,7 +38,7 @@ export async function processDocument(
       data: { status: 'READY' },
     });
   } catch (error) {
-    console.error(`[documentProcessor] Failed to process document ${documentId}:`, error);
+    logError(`documentProcessor ${documentId}`, error);
     await prisma.document.update({
       where: { id: documentId },
       data: { status: 'FAILED' },

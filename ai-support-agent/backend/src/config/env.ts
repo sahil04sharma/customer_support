@@ -17,9 +17,24 @@ function optional(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
 
+function optionalList(name: string): string[] {
+  const raw = process.env[name];
+  if (!raw?.trim()) return [];
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+const nodeEnv = optional('NODE_ENV', 'development');
+const clientUrl = optional('CLIENT_URL', 'http://localhost:5173');
+const extraOrigins = optionalList('ALLOWED_ORIGINS');
+
 export const env = {
+  nodeEnv,
+  isProduction: nodeEnv === 'production',
+  trustProxy: optional('TRUST_PROXY', 'false') === 'true',
+
   port: Number(optional('PORT', '5000')),
-  clientUrl: optional('CLIENT_URL', 'http://localhost:5173'),
+  clientUrl,
+  allowedOrigins: [clientUrl, ...extraOrigins.filter((o) => o !== clientUrl)],
 
   databaseUrl: read('DATABASE_URL'),
 
@@ -50,5 +65,17 @@ export function validateEnv(): void {
       `[env] Missing environment variables: ${missing.join(', ')}.\n` +
         `      Copy .env.example to .env and fill these in. Related features will not work until set.`
     );
+  }
+
+  if (env.isProduction) {
+    if (env.jwtSecret.includes('dev-') || env.jwtSecret.length < 32) {
+      console.warn('[env] JWT_SECRET is weak for production. Use a long random string.');
+    }
+    if (env.jwtRefreshSecret.includes('dev-') || env.jwtRefreshSecret.length < 32) {
+      console.warn('[env] JWT_REFRESH_SECRET is weak for production. Use a long random string.');
+    }
+    if (missing.length > 0) {
+      console.warn('[env] Production is missing required environment variables.');
+    }
   }
 }

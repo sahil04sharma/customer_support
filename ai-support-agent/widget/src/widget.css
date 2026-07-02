@@ -1,0 +1,155 @@
+.widget-chat-window.widget-chat-hidden {
+  display: none;
+}
+
+.widget-chat-window {
+  position: fixed;
+  bottom: 90px;
+  width: 360px;
+  height: 480px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 999999;
+}
+
+.widget-chat-window.position-right {
+  right: 24px;
+}
+
+.widget-chat-window.position-left {
+  left: 24px;
+}
+
+.widget-chat-header {
+  padding: 16px;
+  color: #fff;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.widget-chat-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.widget-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.widget-chat-message {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.widget-chat-message.customer {
+  align-self: flex-end;
+  background: #1a56db;
+  color: #fff;
+}
+
+.widget-chat-message.ai,
+.widget-chat-message.agent {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.widget-chat-message.system {
+  align-self: center;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  text-align: center;
+}
+
+.widget-chat-typing {
+  align-self: flex-start;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.widget-chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.widget-chat-input {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.widget-chat-input:focus {
+  border-color: #1a56db;
+}
+
+.widget-chat-send {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.widget-chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.widget-bubble {
+  position: fixed;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-bubble.position-right {
+  right: 24px;
+}
+
+.widget-bubble.position-left {
+  left: 24px;
+}

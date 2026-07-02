@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AuthLayout from '../../components/layout/AuthLayout';
 import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -8,12 +9,14 @@ export default function BusinessRegister() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { setAuth } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       const { data } = await api.post('/api/auth/business/register', {
         name,
@@ -29,47 +32,67 @@ export default function BusinessRegister() {
       });
       navigate('/dashboard');
     } catch {
-      setError('Registration failed. Email may already be in use.');
+      setError('Could not create account. This email may already be registered.');
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6">Create Account</h1>
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
-        <input
-          type="text"
-          placeholder="Business name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 mb-4"
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 mb-4"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password (min 8 chars)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 mb-6"
-          minLength={8}
-          required
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
-          Register
+    <AuthLayout title="Create your account" subtitle="Start supporting customers with AI in minutes">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        <div>
+          <label htmlFor="name" className="label">Company name</label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input-field"
+            placeholder="Acme Inc."
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="email" className="label">Work email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input-field"
+            placeholder="you@company.com"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="label">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-field"
+            placeholder="At least 8 characters"
+            minLength={8}
+            required
+          />
+        </div>
+        <button type="submit" disabled={loading} className="btn-primary w-full">
+          {loading ? 'Creating account…' : 'Create account'}
         </button>
-        <p className="text-sm text-slate-500 mt-4 text-center">
-          Already have an account? <Link to="/login" className="text-blue-600">Log in</Link>
+        <p className="text-center text-sm text-zinc-500">
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium text-zinc-900 hover:underline">
+            Sign in
+          </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

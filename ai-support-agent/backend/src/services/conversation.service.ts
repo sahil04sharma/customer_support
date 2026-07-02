@@ -37,10 +37,11 @@ export async function getHistory(conversationId: string) {
   const messages = await prisma.message.findMany({
     where: { conversationId },
     orderBy: { createdAt: 'asc' },
-    select: { role: true, content: true },
+    select: { id: true, role: true, content: true },
   });
 
   return messages.map((msg) => ({
+    id: msg.id,
     role: msg.role,
     content: msg.content,
   }));

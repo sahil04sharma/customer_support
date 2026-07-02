@@ -1,12 +1,43 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env } from '../config/env';
 
-const genAI = new GoogleGenerativeAI(env.geminiApiKey);
-const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+const EMBEDDING_MODEL = 'gemini-embedding-001';
+const EMBEDDING_DIMENSIONS = 768;
 
+interface GeminiEmbedResponse {
+  embedding?: { values?: number[] };
+  error?: { message?: string };
+}
+
+/**
+ * Generate a text embedding via the Gemini API.
+ * Uses gemini-embedding-001 (text-embedding-004 was deprecated Jan 2026).
+ * outputDimensionality=768 matches our pgvector column size.
+ */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const result = await model.embedContent(text);
-  return result.embedding.values;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${env.geminiApiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      content: { parts: [{ text }] },
+      outputDimensionality: EMBEDDING_DIMENSIONS,
+    }),
+  });
+
+  const data = (await response.json()) as GeminiEmbedResponse;
+
+  if (!response.ok) {
+    const message = data.error?.message ?? response.statusText;
+    throw new Error(`Gemini embedding failed (${response.status}): ${message}`);
+  }
+
+  const values = data.embedding?.values;
+  if (!values?.length) {
+    throw new Error('Gemini embedding returned no values');
+  }
+
+  return values;
 }
 
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {

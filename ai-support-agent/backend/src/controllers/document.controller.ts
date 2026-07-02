@@ -1,21 +1,30 @@
 import { Request, Response } from 'express';
+import path from 'path';
 import multer from 'multer';
 import { AppError } from '../middleware/error.middleware';
 import { uploadDocument } from '../lib/cloudinary';
 import { prisma } from '../lib/prisma';
 import { processDocument } from '../services/documentProcessor';
 import { extractText } from '../services/pdfExtractor';
+import { logError } from '../utils/safeLog';
+
+const ALLOWED_MIMETYPES = ['application/pdf', 'text/plain'] as const;
+const ALLOWED_EXTENSIONS = ['.pdf', '.txt'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, cb) => {
-    const allowed = ['application/pdf', 'text/plain'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
       cb(new AppError(400, 'Unsupported file type. Upload a PDF or TXT file.'));
+      return;
     }
+    if (!ALLOWED_MIMETYPES.includes(file.mimetype as (typeof ALLOWED_MIMETYPES)[number])) {
+      cb(new AppError(400, 'Unsupported file type. Upload a PDF or TXT file.'));
+      return;
+    }
+    cb(null, true);
   },
 });
 
@@ -36,7 +45,7 @@ async function runBackgroundProcessing(
     const text = await extractText(buffer, mimetype);
     await processDocument(documentId, businessId, text);
   } catch (error) {
-    console.error(`[documents] Background processing failed for ${documentId}:`, error);
+    logError(`documents processing ${documentId}`, error);
     await prisma.document.update({
       where: { id: documentId },
       data: { status: 'FAILED' },

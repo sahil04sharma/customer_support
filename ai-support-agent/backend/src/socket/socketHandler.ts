@@ -7,8 +7,8 @@ import { runAgent } from '../services/agent';
 import {
   appendMessage,
   getHistory,
-  markEscalated,
 } from '../services/conversation.service';
+import { logError } from '../utils/safeLog';
 
 let io: Server;
 
@@ -32,7 +32,18 @@ export function getIO(): Server {
 export function initSocket(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: {
-      origin: [env.clientUrl, /^http:\/\/localhost(:\d+)?$/],
+      origin: (origin, callback) => {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+        if (env.allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        // Embedded widget on customer sites (any HTTPS/HTTP origin)
+        callback(null, true);
+      },
       credentials: true,
     },
   });
@@ -54,49 +65,77 @@ export function initSocket(httpServer: HttpServer): Server {
     });
 
     socket.on('customer_message', async ({ conversationId, content }) => {
-      const conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId },
-      });
-
-      if (!conversation) {
-        socket.emit('error', { message: 'Conversation not found' });
-        return;
-      }
-
-      await appendMessage(conversationId, 'CUSTOMER', content);
-
-      if (conversation.handedOff) {
-        io.to(conversationRoom(conversationId)).emit('customer_message', {
-          conversationId,
-          content,
+      try {
+        const conversation = await prisma.conversation.findUnique({
+          where: { id: conversationId },
         });
-        return;
-      }
 
-      io.to(conversationRoom(conversationId)).emit('ai_typing', { conversationId });
+        if (!conversation) {
+          socket.emit('error', { message: 'Conversation not found' });
+          return;
+        }
 
-      const history = await getHistory(conversationId);
-      const result = await runAgent(content, conversation.businessId, history);
+        if (conversation.status === 'RESOLVED') {
+          socket.emit('error', { message: 'This conversation has ended' });
+          return;
+        }
 
-      const aiMessage = await appendMessage(
-        conversationId,
-        'AI',
-        result.answer,
-        result.confidence
-      );
+        await appendMessage(conversationId, 'CUSTOMER', content);
 
-      io.to(conversationRoom(conversationId)).emit('ai_response', {
-        conversationId,
-        message: aiMessage,
-      });
-
-      if (result.shouldEscalate) {
-        await markEscalated(conversationId);
-        io.to(conversationRoom(conversationId)).emit('escalated_to_human', {
-          conversationId,
+        const live = await prisma.conversation.findUnique({
+          where: { id: conversationId },
+          select: { agentId: true, handedOff: true, businessId: true },
         });
-        io.to(businessRoom(conversation.businessId)).emit('new_escalation', {
+
+        // Human has taken over (agent joined or team replied from dashboard)
+        if (live?.agentId || live?.handedOff) {
+          io.to(conversationRoom(conversationId)).emit('customer_message', {
+            conversationId,
+            content,
+          });
+
+          if (!live.agentId) {
+            io.to(conversationRoom(conversationId)).emit('queue_update', {
+              conversationId,
+              content:
+                'Thanks — your message was received. A support team member will reply shortly.',
+            });
+          }
+          return;
+        }
+
+        io.to(conversationRoom(conversationId)).emit('ai_typing', { conversationId });
+
+        const history = await getHistory(conversationId);
+        const result = await runAgent(content, live!.businessId, history);
+
+        const aiMessage = await appendMessage(
           conversationId,
+          'AI',
+          result.answer,
+          result.confidence
+        );
+
+        io.to(conversationRoom(conversationId)).emit('ai_response', {
+          conversationId,
+          message: aiMessage,
+        });
+
+        // Soft escalation: notify the business team only — AI keeps answering
+        if (result.shouldEscalate) {
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { status: 'ESCALATED' },
+          });
+          io.to(businessRoom(live!.businessId)).emit('new_escalation', {
+            conversationId,
+          });
+        }
+      } catch (error) {
+        logError('socket customer_message', error);
+        io.to(conversationRoom(conversationId)).emit('ai_error', {
+          conversationId,
+          message: 'Sorry, something went wrong. Please try again.',
         });
       }
     });
@@ -135,7 +174,7 @@ export function initSocket(httpServer: HttpServer): Server {
 
       await prisma.conversation.update({
         where: { id: conversationId },
-        data: { agentId },
+        data: { agentId, handedOff: true, status: 'ESCALATED' },
       });
 
       socket.join(conversationRoom(conversationId));

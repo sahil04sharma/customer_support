@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Widget Test Page</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 800px;
+        margin: 80px auto;
+        padding: 0 24px;
+        color: #1e293b;
+      }
+      h1 { margin-bottom: 8px; }
+      p { color: #64748b; line-height: 1.6; }
+      code {
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Test Site</h1>
+    <p>
+      This simulates a business website with the support widget embedded.
+      Replace <code>YOUR_WIDGET_KEY</code> below with your business widget key
+      from the dashboard Embed Code page.
+    </p>
+    <p>Make sure the backend is running on <code>http://localhost:5000</code>.</p>
+
+    <!--
+      After building: npm run build
+      Serve this folder: npx serve .
+      Or load widget.js from the backend at /widget.js
+    -->
+    <script
+      src="http://localhost:5000/widget.js"
+      data-widget-key="cmr1rl41u0001m9ra0p6zrp79"
+      data-api-url="http://localhost:5000"
+    ></script>
+  </body>
+</html>

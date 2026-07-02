@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AuthLayout from '../../components/layout/AuthLayout';
 import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -7,12 +8,14 @@ export default function BusinessLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { setAuth } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       const { data } = await api.post('/api/auth/business/login', { email, password });
       setAuth(data.accessToken, data.refreshToken, {
@@ -24,41 +27,54 @@ export default function BusinessLogin() {
       });
       navigate('/dashboard');
     } catch {
-      setError('Invalid email or password');
+      setError('Invalid email or password. Please try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6">Business Login</h1>
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 mb-4"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 mb-6"
-          required
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
-          Log in
+    <AuthLayout title="Welcome back" subtitle="Sign in to your business dashboard">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        <div>
+          <label htmlFor="email" className="label">Work email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input-field"
+            placeholder="you@company.com"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="label">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-field"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+        <button type="submit" disabled={loading} className="btn-primary w-full">
+          {loading ? 'Signing in…' : 'Sign in'}
         </button>
-        <p className="text-sm text-slate-500 mt-4 text-center">
-          No account? <Link to="/register" className="text-blue-600">Register</Link>
-        </p>
-        <p className="text-sm text-slate-500 mt-2 text-center">
-          <Link to="/agent" className="text-blue-600">Agent login</Link>
+        <p className="text-center text-sm text-zinc-500">
+          Don&apos;t have an account?{' '}
+          <Link to="/register" className="font-medium text-zinc-900 hover:underline">
+            Create one
+          </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

@@ -32,6 +32,10 @@ The complete product specification lives in [`../../ai_support_agent_docs.md`](.
 | 7 | [phase-7-widget.md](phase-7-widget.md) | Embeddable `widget.js` |
 | 8 | [phase-8-deploy.md](phase-8-deploy.md) | Deploy, harden, document, final E2E |
 
+## Future work
+
+Phases 1-8 above build and harden the core product. Planned next features live in [`future-work/`](future-work/README.md) - self-contained specs for the platform admin panel, advanced widget customization, in-app onboarding, knowledge-base guidance, and a prioritized backlog (billing, plan limits, and more).
+
 ## Working agreement
 
 - Build phases in order; never skip Phase 3 (RAG) — it is the core differentiator.
