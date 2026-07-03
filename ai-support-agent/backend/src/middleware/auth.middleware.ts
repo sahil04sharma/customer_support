@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { AppError } from './error.middleware';
+import { prisma } from '../lib/prisma';
 import { verifyAccessToken } from '../services/auth.service';
 
 function authenticate(req: Request): void {
@@ -50,5 +51,30 @@ export function requireAgent(req: Request, res: Response, next: NextFunction): v
       return;
     }
     next();
+  });
+}
+
+export function requireSuperAdmin(req: Request, res: Response, next: NextFunction): void {
+  requireAuth(req, res, async (err) => {
+    if (err) {
+      next(err);
+      return;
+    }
+    if (req.auth?.role !== 'ADMIN') {
+      next(new AppError(403, 'Admin access required'));
+      return;
+    }
+    try {
+      const admin = await prisma.platformAdmin.findUnique({
+        where: { id: req.auth!.sub },
+      });
+      if (!admin) {
+        next(new AppError(403, 'Admin account not found'));
+        return;
+      }
+      next();
+    } catch (e) {
+      next(e);
+    }
   });
 }

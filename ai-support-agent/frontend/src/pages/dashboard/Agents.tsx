@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { UserPlus, Users, X } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Badge from '../../components/ui/Badge';
@@ -118,10 +119,15 @@ export default function Agents() {
           title="No agents yet"
           description="Invite team members to handle customer chats when the AI can't answer confidently."
           action={
-            <button onClick={() => setShowForm(true)} className="btn-primary gap-2">
-              <UserPlus className="h-4 w-4" />
-              Invite your first agent
-            </button>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button onClick={() => setShowForm(true)} className="btn-primary gap-2">
+                <UserPlus className="h-4 w-4" />
+                Invite your first agent
+              </button>
+              <Link to="/dashboard/getting-started" className="btn-secondary text-sm">
+                Setup guide
+              </Link>
+            </div>
           }
         />
       ) : (

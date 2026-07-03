@@ -40,6 +40,16 @@ export default function Conversations() {
           icon={MessageSquare}
           title="No conversations yet"
           description="Conversations appear here once customers start chatting via your embedded widget."
+          action={
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link to="/dashboard/embed" className="btn-primary">
+                Install the widget
+              </Link>
+              <Link to="/dashboard/test" className="btn-secondary">
+                Test your assistant
+              </Link>
+            </div>
+          }
         />
       ) : (
         <div className="card divide-y divide-zinc-100 overflow-hidden">

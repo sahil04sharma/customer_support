@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import type { WidgetMessage, WidgetSettings } from './lib/api';
+import { displayHeaderTitle } from './lib/api';
 import { sendCustomerMessage, useWidgetSocket } from './hooks/useWidgetSocket';
 import './widget.css';
 
@@ -29,8 +30,12 @@ export default function ChatWindow({
   const [isTyping, setIsTyping] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [resolved, setResolved] = useState(false);
+  const [quickRepliesVisible, setQuickRepliesVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const positionClass = settings.widgetPosition === 'bottom-left' ? 'position-left' : 'position-right';
+  const isDark = settings.themeMode === 'dark';
+  const headerTitle = displayHeaderTitle(settings);
+  const quickReplies = settings.quickReplies ?? [];
 
   useEffect(() => {
     if (welcomeShown && messages.length === 0) {
@@ -57,6 +62,7 @@ export default function ChatWindow({
           content: m.content,
         }))
       );
+      setQuickRepliesVisible(false);
     }
   }, []);
 
@@ -72,7 +78,17 @@ export default function ChatWindow({
 
   const onEscalated = useCallback(() => {
     setEscalated(true);
-  }, []);
+    if (settings.offlineMessage) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `offline-${Date.now()}`,
+          role: 'SYSTEM',
+          content: settings.offlineMessage!,
+        },
+      ]);
+    }
+  }, [settings.offlineMessage]);
 
   const onAgentJoined = useCallback((agentName: string) => {
     setMessages((prev) => [
@@ -142,11 +158,10 @@ export default function ChatWindow({
     onAiError,
   });
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || resolved) return;
+  function sendMessage(text: string) {
+    if (!text.trim() || resolved) return;
 
+    setQuickRepliesVisible(false);
     setMessages((prev) => [
       ...prev,
       { id: `local-${Date.now()}`, role: 'CUSTOMER', content: text },
@@ -155,10 +170,34 @@ export default function ChatWindow({
     sendCustomerMessage(conversationId, text);
   }
 
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    sendMessage(input.trim());
+  }
+
+  function handleQuickReply(text: string) {
+    sendMessage(text);
+  }
+
+  const showQuickReplies =
+    quickRepliesVisible &&
+    quickReplies.length > 0 &&
+    !resolved &&
+    !messages.some((m) => m.role === 'CUSTOMER');
+
   return (
-    <div className={`widget-chat-window ${positionClass}${visible ? '' : ' widget-chat-hidden'}`}>
+    <div
+      className={`widget-chat-window ${positionClass}${visible ? '' : ' widget-chat-hidden'}${isDark ? ' theme-dark' : ''}`}
+    >
       <div className="widget-chat-header" style={{ backgroundColor: settings.widgetColor }}>
-        <span>{settings.agentName}</span>
+        <div className="widget-chat-header-title">
+          {settings.avatarImageUrl ? (
+            <img src={settings.avatarImageUrl} alt="" className="widget-chat-avatar" />
+          ) : (
+            <span className="widget-chat-avatar-fallback">{headerTitle[0]?.toUpperCase()}</span>
+          )}
+          <span>{headerTitle}</span>
+        </div>
         <button className="widget-chat-close" onClick={onClose} aria-label="Close chat">
           ×
         </button>
@@ -178,6 +217,20 @@ export default function ChatWindow({
             {msg.content}
           </div>
         ))}
+        {showQuickReplies && (
+          <div className="widget-quick-replies">
+            {quickReplies.map((reply) => (
+              <button
+                key={reply}
+                type="button"
+                className="widget-quick-reply-chip"
+                onClick={() => handleQuickReply(reply)}
+              >
+                {reply}
+              </button>
+            ))}
+          </div>
+        )}
         {isTyping && !escalated && (
           <div className="widget-chat-typing">{settings.agentName} is typing...</div>
         )}
@@ -201,6 +254,10 @@ export default function ChatWindow({
           Send
         </button>
       </form>
+
+      {settings.showBranding !== false && (
+        <p className="widget-branding">Powered by SupportDesk</p>
+      )}
     </div>
   );
 }

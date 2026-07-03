@@ -1,8 +1,43 @@
 import { Request, Response } from 'express';
+import path from 'path';
+import multer from 'multer';
 import { AppError } from '../middleware/error.middleware';
+import { uploadWidgetImage } from '../lib/cloudinary';
 import { prisma } from '../lib/prisma';
 import { hashPassword } from '../services/auth.service';
-import { inviteAgentSchema, updateSettingsSchema } from '../validation/business.schema';
+import { isSettingsCustomized } from '../services/onboarding.service';
+import {
+  inviteAgentSchema,
+  updateSettingsSchema,
+  widgetImageTypeSchema,
+} from '../validation/business.schema';
+
+const WIDGET_IMAGE_MIMETYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/svg+xml',
+] as const;
+const WIDGET_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.svg'];
+
+const widgetImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!WIDGET_IMAGE_EXTENSIONS.includes(ext)) {
+      cb(new AppError(400, 'Unsupported image type. Use PNG, JPG, WebP, or SVG.'));
+      return;
+    }
+    if (!WIDGET_IMAGE_MIMETYPES.includes(file.mimetype as (typeof WIDGET_IMAGE_MIMETYPES)[number])) {
+      cb(new AppError(400, 'Unsupported image type. Use PNG, JPG, WebP, or SVG.'));
+      return;
+    }
+    cb(null, true);
+  },
+});
+
+export const widgetImageMiddleware = widgetImageUpload.single('file');
 
 function omitPassword<T extends { password: string }>(entity: T): Omit<T, 'password'> {
   const { password: _password, ...safe } = entity;
@@ -34,6 +69,17 @@ export async function updateSettings(req: Request, res: Response): Promise<void>
   });
 
   res.json(settings);
+}
+
+export async function uploadWidgetImageHandler(req: Request, res: Response): Promise<void> {
+  if (!req.file) {
+    throw new AppError(400, 'No image uploaded');
+  }
+
+  const imageType = widgetImageTypeSchema.parse(req.body.type);
+  const url = await uploadWidgetImage(req.file.buffer, req.file.originalname);
+
+  res.status(201).json({ url, type: imageType });
 }
 
 export async function getWidgetKey(req: Request, res: Response): Promise<void> {
@@ -113,6 +159,22 @@ export async function deleteAgent(req: Request, res: Response): Promise<void> {
 
   await prisma.agent.delete({ where: { id } });
   res.json({ message: 'Agent removed' });
+}
+
+export async function getOnboarding(req: Request, res: Response): Promise<void> {
+  const businessId = req.auth!.businessId;
+
+  const [readyDocCount, settings, conversationCount] = await Promise.all([
+    prisma.document.count({ where: { businessId, status: 'READY' } }),
+    prisma.businessSettings.findUnique({ where: { businessId } }),
+    prisma.conversation.count({ where: { businessId } }),
+  ]);
+
+  res.json({
+    hasReadyDoc: readyDocCount > 0,
+    hasCustomized: settings ? isSettingsCustomized(settings) : false,
+    hasConversation: conversationCount > 0,
+  });
 }
 
 export async function getAnalytics(req: Request, res: Response): Promise<void> {

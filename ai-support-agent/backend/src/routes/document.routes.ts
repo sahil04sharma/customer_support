@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   deleteDocument,
+  getDocumentsSummary,
   listDocuments,
   uploadDocumentHandler,
   uploadMiddleware,
@@ -13,6 +14,7 @@ const router = Router();
 router.use(requireBusiness);
 
 router.post('/upload', uploadMiddleware, asyncHandler(uploadDocumentHandler));
+router.get('/summary', asyncHandler(getDocumentsSummary));
 router.get('/', asyncHandler(listDocuments));
 router.delete('/:id', asyncHandler(deleteDocument));
 

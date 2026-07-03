@@ -68,10 +68,16 @@ export function initSocket(httpServer: HttpServer): Server {
       try {
         const conversation = await prisma.conversation.findUnique({
           where: { id: conversationId },
+          include: { business: { select: { status: true } } },
         });
 
         if (!conversation) {
           socket.emit('error', { message: 'Conversation not found' });
+          return;
+        }
+
+        if (conversation.business.status === 'SUSPENDED') {
+          socket.emit('error', { message: 'This support widget is temporarily unavailable' });
           return;
         }
 
@@ -107,7 +113,9 @@ export function initSocket(httpServer: HttpServer): Server {
         io.to(conversationRoom(conversationId)).emit('ai_typing', { conversationId });
 
         const history = await getHistory(conversationId);
-        const result = await runAgent(content, live!.businessId, history);
+        const result = await runAgent(content, live!.businessId, history, {
+          conversationId,
+        });
 
         const aiMessage = await appendMessage(
           conversationId,

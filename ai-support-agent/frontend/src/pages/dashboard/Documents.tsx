@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FileText, Trash2, Upload } from 'lucide-react';
+import { FileText, RefreshCw, Trash2, Upload } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
+import LowContentWarning from '../../components/knowledge/LowContentWarning';
+import ReadinessMeter from '../../components/knowledge/ReadinessMeter';
+import RecommendedDocsChecklist from '../../components/knowledge/RecommendedDocsChecklist';
 import { api } from '../../lib/api';
-
-interface Document {
-  id: string;
-  name: string;
-  status: 'PROCESSING' | 'READY' | 'FAILED';
-  createdAt: string;
-}
+import {
+  detectRecommendedCoverage,
+  isLowReadiness,
+  type DocumentRow,
+  type DocumentsSummary,
+} from '../../lib/knowledgeBase';
 
 const statusVariant = {
   PROCESSING: 'warning' as const,
@@ -19,19 +21,40 @@ const statusVariant = {
   FAILED: 'error' as const,
 };
 
+const statusLabel = {
+  PROCESSING: 'Processing',
+  READY: 'Ready',
+  FAILED: 'Failed',
+};
+
+const defaultSummary: DocumentsSummary = {
+  totalDocuments: 0,
+  readyDocuments: 0,
+  statusCounts: { READY: 0, PROCESSING: 0, FAILED: 0 },
+  totalChunks: 0,
+  readinessLevel: 'EMPTY',
+};
+
 export default function Documents() {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DocumentRow[]>([]);
+  const [summary, setSummary] = useState<DocumentsSummary>(defaultSummary);
   const [uploading, setUploading] = useState(false);
 
-  const fetchDocuments = useCallback(() => {
-    api.get('/api/documents').then((res) => setDocuments(res.data));
+  const fetchData = useCallback(() => {
+    Promise.all([
+      api.get<DocumentRow[]>('/api/documents'),
+      api.get<DocumentsSummary>('/api/documents/summary'),
+    ]).then(([docsRes, summaryRes]) => {
+      setDocuments(docsRes.data);
+      setSummary(summaryRes.data);
+    });
   }, []);
 
   useEffect(() => {
-    fetchDocuments();
-    const interval = setInterval(fetchDocuments, 5000);
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
-  }, [fetchDocuments]);
+  }, [fetchData]);
 
   const onDrop = useCallback(
     async (files: File[]) => {
@@ -43,24 +66,30 @@ export default function Documents() {
         await api.post('/api/documents/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        fetchDocuments();
+        fetchData();
       } finally {
         setUploading(false);
       }
     },
-    [fetchDocuments]
+    [fetchData]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: { 'application/pdf': ['.pdf'], 'text/plain': ['.txt'] },
     multiple: false,
+    noClick: false,
   });
 
   async function handleDelete(id: string) {
     await api.delete(`/api/documents/${id}`);
-    fetchDocuments();
+    fetchData();
   }
+
+  const coverage = detectRecommendedCoverage(
+    documents.filter((d) => d.status === 'READY').map((d) => d.name)
+  );
+  const showLowWarning = isLowReadiness(summary.readinessLevel);
 
   return (
     <div>
@@ -69,15 +98,24 @@ export default function Documents() {
         description="Upload documents your AI uses to answer customers — FAQs, return policies, product guides, and more."
       />
 
-      <div className="mb-6 rounded-xl border border-blue-200/60 bg-blue-50/50 px-5 py-4">
-        <p className="text-sm font-medium text-blue-900">What to upload</p>
-        <p className="mt-1 text-sm leading-relaxed text-blue-800/80">
-          PDF or TXT files with your support content. You can upload multiple files — the AI
-          searches all of them. File names don&apos;t matter; only the text inside is used.
+      <div className="mb-6 space-y-6">
+        <ReadinessMeter summary={summary} />
+        {showLowWarning && <LowContentWarning showLink={false} />}
+        <RecommendedDocsChecklist coverage={coverage} />
+      </div>
+
+      <div className="mb-4 rounded-xl border border-zinc-200 bg-zinc-50/80 px-5 py-4">
+        <p className="text-sm font-medium text-zinc-900">
+          Your AI can only answer from what you upload
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+          Add all your support content — PDF or TXT files. You can upload multiple files and the AI
+          searches all of them. File names help us suggest what topics you&apos;ve covered.
         </p>
       </div>
 
       <div
+        id="doc-upload"
         {...getRootProps()}
         className={`mb-8 cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
           isDragActive
@@ -106,6 +144,16 @@ export default function Documents() {
           icon={FileText}
           title="No documents yet"
           description="Upload your first FAQ or policy document to train your AI assistant."
+          action={
+            <button
+              type="button"
+              onClick={() => document.getElementById('doc-upload')?.scrollIntoView({ behavior: 'smooth' })}
+              className="btn-primary gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload your first document
+            </button>
+          }
         />
       ) : (
         <div className="card overflow-hidden">
@@ -114,6 +162,7 @@ export default function Documents() {
               <tr className="border-b border-zinc-100 bg-zinc-50/80">
                 <th className="px-5 py-3.5 font-medium text-zinc-500">File</th>
                 <th className="px-5 py-3.5 font-medium text-zinc-500">Status</th>
+                <th className="px-5 py-3.5 font-medium text-zinc-500">Chunks</th>
                 <th className="px-5 py-3.5 font-medium text-zinc-500">Uploaded</th>
                 <th className="px-5 py-3.5" />
               </tr>
@@ -126,11 +175,21 @@ export default function Documents() {
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100">
                         <FileText className="h-4 w-4 text-zinc-500" />
                       </div>
-                      <span className="font-medium text-zinc-900">{doc.name}</span>
+                      <div>
+                        <span className="font-medium text-zinc-900">{doc.name}</span>
+                        {doc.status === 'FAILED' && (
+                          <p className="mt-0.5 text-xs text-red-600">
+                            Processing failed — try a different file or re-upload.
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <Badge variant={statusVariant[doc.status]}>{doc.status}</Badge>
+                    <Badge variant={statusVariant[doc.status]}>{statusLabel[doc.status]}</Badge>
+                  </td>
+                  <td className="px-5 py-4 text-zinc-600">
+                    {doc.status === 'READY' ? doc.chunkCount : doc.status === 'PROCESSING' ? '—' : '0'}
                   </td>
                   <td className="px-5 py-4 text-zinc-500">
                     {new Date(doc.createdAt).toLocaleDateString(undefined, {
@@ -140,13 +199,25 @@ export default function Documents() {
                     })}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button
-                      onClick={() => handleDelete(doc.id)}
-                      className="rounded-lg p-2 text-zinc-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                      aria-label="Delete document"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      {doc.status === 'FAILED' && (
+                        <button
+                          onClick={() => open()}
+                          className="rounded-lg p-2 text-amber-600 opacity-100 transition-all hover:bg-amber-50"
+                          aria-label="Re-upload document"
+                          title="Re-upload"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(doc.id)}
+                        className="rounded-lg p-2 text-zinc-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                        aria-label="Delete document"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

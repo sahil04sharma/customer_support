@@ -3,6 +3,7 @@ import {
   BarChart3,
   Code2,
   FileText,
+  HelpCircle,
   LogOut,
   MessageSquare,
   MessageSquareText,
@@ -13,6 +14,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/dashboard', label: 'Overview', icon: BarChart3, exact: true },
+  { to: '/dashboard/getting-started', label: 'Getting started', icon: HelpCircle },
   { to: '/dashboard/documents', label: 'Knowledge base', icon: FileText },
   { to: '/dashboard/conversations', label: 'Conversations', icon: MessageSquareText },
   { to: '/dashboard/agents', label: 'Team', icon: Users },

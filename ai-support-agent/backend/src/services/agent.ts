@@ -2,8 +2,9 @@ import Groq from 'groq-sdk';
 import { env } from '../config/env';
 import { prisma } from '../lib/prisma';
 import { searchKnowledgeBase } from './vectorSearch';
+import { recordUsageSafe } from './usage.service';
 
-const groq = new Groq({ apiKey: env.groqApiKey });
+const GROQ_MODEL = 'llama-3.1-8b-instant';
 
 export interface AgentResponse {
   answer: string;
@@ -12,10 +13,13 @@ export interface AgentResponse {
   sources: string[];
 }
 
+const groq = new Groq({ apiKey: env.groqApiKey });
+
 export async function runAgent(
   query: string,
   businessId: string,
-  conversationHistory: { role: string; content: string }[]
+  conversationHistory: { role: string; content: string }[],
+  options?: { conversationId?: string }
 ): Promise<AgentResponse> {
   const settings = await prisma.businessSettings.findUnique({
     where: { businessId },
@@ -55,10 +59,20 @@ ${context}`;
     messages.push({ role: 'user', content: query });
   }
   const response = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
+    model: GROQ_MODEL,
     messages,
     max_tokens: 500,
     temperature: 0.3,
+  });
+
+  const usage = response.usage;
+  recordUsageSafe({
+    businessId,
+    type: 'AI_MESSAGE',
+    model: GROQ_MODEL,
+    promptTokens: usage?.prompt_tokens ?? 0,
+    outputTokens: usage?.completion_tokens ?? 0,
+    conversationId: options?.conversationId,
   });
 
   const answer = response.choices[0].message.content ?? '';

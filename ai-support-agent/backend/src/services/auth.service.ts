@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { redis, redisKeys } from '../lib/redis';
 
-export type UserRole = 'BUSINESS' | 'AGENT';
+export type UserRole = 'BUSINESS' | 'AGENT' | 'ADMIN';
 
 export interface TokenPayload {
   sub: string;

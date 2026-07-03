@@ -17,6 +17,12 @@
   z-index: 999999;
 }
 
+.widget-chat-window.theme-dark {
+  background: #18181b;
+  color: #f4f4f5;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
 .widget-chat-window.position-right {
   right: 24px;
 }
@@ -26,12 +32,47 @@
 }
 
 .widget-chat-header {
-  padding: 16px;
+  padding: 14px 16px;
   color: #fff;
   font-weight: 600;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.widget-chat-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.widget-chat-header-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.widget-chat-avatar-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .widget-chat-close {
@@ -41,6 +82,7 @@
   font-size: 20px;
   cursor: pointer;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .widget-chat-messages {
@@ -51,6 +93,10 @@
   flex-direction: column;
   gap: 12px;
   background: #f8fafc;
+}
+
+.widget-chat-window.theme-dark .widget-chat-messages {
+  background: #09090b;
 }
 
 .widget-chat-message {
@@ -75,12 +121,24 @@
   color: #1e293b;
 }
 
+.widget-chat-window.theme-dark .widget-chat-message.ai,
+.widget-chat-window.theme-dark .widget-chat-message.agent {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #f4f4f5;
+}
+
 .widget-chat-message.system {
   align-self: center;
   background: #fef3c7;
   color: #92400e;
   font-size: 12px;
   text-align: center;
+}
+
+.widget-chat-window.theme-dark .widget-chat-message.system {
+  background: #422006;
+  color: #fcd34d;
 }
 
 .widget-chat-typing {
@@ -93,12 +151,56 @@
   color: #64748b;
 }
 
+.widget-chat-window.theme-dark .widget-chat-typing {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #a1a1aa;
+}
+
+.widget-quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.widget-quick-reply-chip {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.widget-quick-reply-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.widget-chat-window.theme-dark .widget-quick-reply-chip {
+  background: #27272a;
+  border-color: #52525b;
+  color: #e4e4e7;
+}
+
+.widget-chat-window.theme-dark .widget-quick-reply-chip:hover {
+  background: #3f3f46;
+}
+
 .widget-chat-input-area {
   display: flex;
   gap: 8px;
   padding: 12px;
   border-top: 1px solid #e2e8f0;
   background: #fff;
+}
+
+.widget-chat-window.theme-dark .widget-chat-input-area {
+  border-top-color: #3f3f46;
+  background: #18181b;
 }
 
 .widget-chat-input {
@@ -108,6 +210,14 @@
   padding: 10px 12px;
   font-size: 14px;
   outline: none;
+  background: #fff;
+  color: #1e293b;
+}
+
+.widget-chat-window.theme-dark .widget-chat-input {
+  background: #27272a;
+  border-color: #52525b;
+  color: #f4f4f5;
 }
 
 .widget-chat-input:focus {
@@ -129,27 +239,117 @@
   cursor: not-allowed;
 }
 
-.widget-bubble {
+.widget-branding {
+  margin: 0;
+  padding: 6px 12px 10px;
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+  background: #fff;
+}
+
+.widget-chat-window.theme-dark .widget-branding {
+  background: #18181b;
+  color: #71717a;
+}
+
+.widget-launcher-wrap {
   position: fixed;
   bottom: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.widget-launcher-wrap.position-right {
+  right: 24px;
+  flex-direction: row-reverse;
+}
+
+.widget-launcher-wrap.position-left {
+  left: 24px;
+}
+
+.widget-launcher-text {
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+}
+
+.widget-bubble {
+  position: relative;
   border: none;
   color: #fff;
   font-size: 24px;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
+.widget-bubble.shape-round {
+  border-radius: 50%;
+}
+
+.widget-bubble.shape-rounded {
+  border-radius: 16px;
+}
+
+.widget-bubble.shape-square {
+  border-radius: 8px;
+}
+
+.widget-bubble.size-small {
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+}
+
+.widget-bubble.size-medium {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+.widget-bubble.size-large {
+  width: 64px;
+  height: 64px;
+  font-size: 26px;
+}
+
+.widget-bubble-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.widget-bubble-loading {
+  font-size: 18px;
+}
+
+/* Legacy position classes when bubble used without wrap */
 .widget-bubble.position-right {
+  position: fixed;
+  bottom: 24px;
   right: 24px;
 }
 
 .widget-bubble.position-left {
+  position: fixed;
+  bottom: 24px;
   left: 24px;
+}
+
+.widget-launcher-wrap .widget-bubble.position-right,
+.widget-launcher-wrap .widget-bubble.position-left {
+  position: static;
 }

@@ -1,10 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageHeader from './ui/PageHeader';
+import LowContentWarning from './knowledge/LowContentWarning';
 import { api } from '../lib/api';
+import { isLowReadiness, type DocumentsSummary } from '../lib/knowledgeBase';
+
+const defaultSummary: DocumentsSummary = {
+  totalDocuments: 0,
+  readyDocuments: 0,
+  statusCounts: { READY: 0, PROCESSING: 0, FAILED: 0 },
+  totalChunks: 0,
+  readinessLevel: 'EMPTY',
+};
 
 export default function EmbedCode() {
   const [widgetKey, setWidgetKey] = useState('');
+  const [summary, setSummary] = useState<DocumentsSummary>(defaultSummary);
   const [copied, setCopied] = useState(false);
   const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
@@ -12,6 +24,7 @@ export default function EmbedCode() {
     api.get('/api/business/widget-key').then((res: { data: { widgetKey: string } }) => {
       setWidgetKey(res.data.widgetKey);
     });
+    api.get<DocumentsSummary>('/api/documents/summary').then((res) => setSummary(res.data));
   }, []);
 
   const script = `<script src="${apiUrl}/widget.js" data-widget-key="${widgetKey}"></script>`;
@@ -28,6 +41,12 @@ export default function EmbedCode() {
         title="Install chat widget"
         description="Add this code to your website so customers can chat with your AI assistant."
       />
+
+      {isLowReadiness(summary.readinessLevel) && (
+        <div className="mb-6">
+          <LowContentWarning />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
@@ -57,6 +76,16 @@ export default function EmbedCode() {
             </li>
             <li className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-700">3</span>
+              <span>
+                Test first with the{' '}
+                <Link to="/dashboard/test" className="font-medium text-zinc-900 underline">
+                  in-app preview
+                </Link>
+                , then confirm the chat bubble appears on your live site.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-700">4</span>
               <span>A chat bubble will appear on your site. Customers click it to start a conversation.</span>
             </li>
           </ol>

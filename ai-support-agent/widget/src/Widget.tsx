@@ -12,7 +12,19 @@ const defaultSettings: WidgetSettings = {
   welcomeMessage: 'Hi! How can I help you today?',
   agentName: 'Support Assistant',
   confidenceThreshold: 0.7,
+  bubbleShape: 'round',
+  bubbleSize: 'medium',
+  themeMode: 'light',
+  offlineMessage: "We're offline right now, but leave a message!",
+  showBranding: true,
+  quickReplies: [],
 };
+
+function bubbleClasses(settings: WidgetSettings): string {
+  const shape = settings.bubbleShape ?? 'round';
+  const size = settings.bubbleSize ?? 'medium';
+  return `widget-bubble shape-${shape} size-${size}`;
+}
 
 export default function Widget({ widgetKey }: WidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +50,7 @@ export default function Widget({ widgetKey }: WidgetProps) {
         const data = await startConversation(widgetKey);
         setConversationId(data.conversationId);
         if (data.settings) {
-          setSettings(data.settings);
+          setSettings({ ...defaultSettings, ...data.settings });
         }
         setWelcomeShown(true);
       } catch (err) {
@@ -62,14 +74,27 @@ export default function Widget({ widgetKey }: WidgetProps) {
         />
       )}
 
-      <button
-        className={`widget-bubble ${positionClass}`}
-        style={{ backgroundColor: settings.widgetColor }}
-        onClick={handleOpen}
-        aria-label="Open chat"
-      >
-        {loading ? '…' : isOpen ? '×' : '💬'}
-      </button>
+      <div className={`widget-launcher-wrap ${positionClass}`}>
+        {settings.launcherText && !isOpen && (
+          <span className="widget-launcher-text">{settings.launcherText}</span>
+        )}
+        <button
+          className={`${bubbleClasses(settings)} ${positionClass}`}
+          style={{ backgroundColor: settings.widgetColor }}
+          onClick={handleOpen}
+          aria-label="Open chat"
+        >
+          {loading ? (
+            <span className="widget-bubble-loading">…</span>
+          ) : isOpen ? (
+            '×'
+          ) : settings.launcherImageUrl ? (
+            <img src={settings.launcherImageUrl} alt="" className="widget-bubble-image" />
+          ) : (
+            '💬'
+          )}
+        </button>
+      </div>
     </>
   );
 }

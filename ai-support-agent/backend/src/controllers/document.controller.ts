@@ -6,6 +6,7 @@ import { uploadDocument } from '../lib/cloudinary';
 import { prisma } from '../lib/prisma';
 import { processDocument } from '../services/documentProcessor';
 import { extractText } from '../services/pdfExtractor';
+import { computeReadinessLevel } from '../services/knowledgeReadiness.service';
 import { logError } from '../utils/safeLog';
 
 const ALLOWED_MIMETYPES = ['application/pdf', 'text/plain'] as const;
@@ -92,10 +93,47 @@ export async function listDocuments(req: Request, res: Response): Promise<void> 
       fileUrl: true,
       status: true,
       createdAt: true,
+      _count: { select: { chunks: true } },
     },
   });
 
-  res.json(documents);
+  res.json(
+    documents.map(({ _count, ...doc }) => ({
+      ...doc,
+      chunkCount: _count.chunks,
+    }))
+  );
+}
+
+export async function getDocumentsSummary(req: Request, res: Response): Promise<void> {
+  const businessId = req.auth!.businessId;
+
+  const [statusGroups, totalChunks, readyDocuments] = await Promise.all([
+    prisma.document.groupBy({
+      by: ['status'],
+      where: { businessId },
+      _count: { _all: true },
+    }),
+    prisma.documentChunk.count({ where: { businessId } }),
+    prisma.document.count({ where: { businessId, status: 'READY' } }),
+  ]);
+
+  const statusCounts = { READY: 0, PROCESSING: 0, FAILED: 0 };
+  let totalDocuments = 0;
+  for (const group of statusGroups) {
+    statusCounts[group.status] = group._count._all;
+    totalDocuments += group._count._all;
+  }
+
+  const readinessLevel = computeReadinessLevel(readyDocuments, totalChunks);
+
+  res.json({
+    totalDocuments,
+    readyDocuments,
+    statusCounts,
+    totalChunks,
+    readinessLevel,
+  });
 }
 
 export async function deleteDocument(req: Request, res: Response): Promise<void> {

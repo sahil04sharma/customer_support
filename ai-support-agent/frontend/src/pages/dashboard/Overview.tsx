@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { CheckCircle2, Clock, MessageSquareWarning } from 'lucide-react';
+import OnboardingChecklist from '../../components/OnboardingChecklist';
 import PageHeader from '../../components/ui/PageHeader';
+import { useOnboardingProgress } from '../../hooks/useOnboardingProgress';
 import { api } from '../../lib/api';
 
 interface Analytics {
@@ -12,10 +15,15 @@ interface Analytics {
 
 export default function Overview() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const { status, tested, showChecklist, dismiss, refresh } = useOnboardingProgress();
 
   useEffect(() => {
     api.get('/api/business/analytics').then((res) => setAnalytics(res.data));
   }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   const chartData = analytics
     ? [
@@ -23,6 +31,8 @@ export default function Overview() {
         { name: 'Escalated', count: analytics.escalated },
       ]
     : [];
+
+  const hasActivity = analytics && (analytics.resolved > 0 || analytics.escalated > 0);
 
   const stats = [
     {
@@ -55,6 +65,29 @@ export default function Overview() {
         description="Monitor how your AI assistant is handling customer conversations."
       />
 
+      {showChecklist && (
+        <div className="mb-8">
+          <OnboardingChecklist status={status} tested={tested} onDismiss={dismiss} />
+        </div>
+      )}
+
+      {!hasActivity && !showChecklist && (
+        <div className="mb-8 rounded-xl border border-zinc-200 bg-zinc-50/80 px-5 py-4">
+          <p className="text-sm font-medium text-zinc-900">No conversations yet</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Analytics will appear once customers chat via your widget.{' '}
+            <Link to="/dashboard/test" className="font-medium text-zinc-700 underline hover:text-zinc-900">
+              Test your assistant
+            </Link>{' '}
+            or{' '}
+            <Link to="/dashboard/embed" className="font-medium text-zinc-700 underline hover:text-zinc-900">
+              install the widget
+            </Link>{' '}
+            to get started.
+          </p>
+        </div>
+      )}
+
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -76,7 +109,7 @@ export default function Overview() {
         })}
       </div>
 
-      {chartData.length > 0 && (
+      {chartData.length > 0 && hasActivity && (
         <div className="card p-6">
           <h3 className="mb-6 text-sm font-semibold text-zinc-900">Conversation outcomes</h3>
           <div className="h-64">

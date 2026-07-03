@@ -17,7 +17,7 @@ export async function processDocument(
     }
 
     for (let i = 0; i < chunks.length; i++) {
-      const embedding = await generateEmbedding(chunks[i]);
+      const embedding = await generateEmbedding(chunks[i], { businessId });
 
       await prisma.$executeRaw`
         INSERT INTO "DocumentChunk" (id, "documentId", "businessId", content, embedding, "chunkIndex", "createdAt")

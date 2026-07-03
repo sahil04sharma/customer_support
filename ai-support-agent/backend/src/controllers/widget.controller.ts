@@ -22,6 +22,10 @@ export async function startWidgetConversation(req: Request, res: Response): Prom
     throw new AppError(404, 'Invalid widget key');
   }
 
+  if (business.status === 'SUSPENDED') {
+    throw new AppError(403, 'This support widget is temporarily unavailable');
+  }
+
   const conversation = await startConversation(business.id, {
     customerName: body.customerName,
     customerEmail: body.customerEmail,

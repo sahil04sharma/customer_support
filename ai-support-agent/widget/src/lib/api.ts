@@ -4,6 +4,16 @@ export interface WidgetSettings {
   welcomeMessage: string;
   agentName: string;
   confidenceThreshold: number;
+  launcherImageUrl?: string | null;
+  avatarImageUrl?: string | null;
+  bubbleShape?: string;
+  bubbleSize?: string;
+  themeMode?: string;
+  headerTitle?: string | null;
+  launcherText?: string | null;
+  offlineMessage?: string;
+  showBranding?: boolean;
+  quickReplies?: string[];
 }
 
 export interface WidgetMessage {
@@ -26,6 +36,10 @@ export function setApiBaseUrl(url: string): void {
 
 export function getApiBaseUrl(): string {
   return apiBaseUrl;
+}
+
+export function displayHeaderTitle(settings: WidgetSettings): string {
+  return settings.headerTitle?.trim() || settings.agentName;
 }
 
 export async function startConversation(

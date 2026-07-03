@@ -6,7 +6,7 @@ export async function searchKnowledgeBase(
   businessId: string,
   limit = 5
 ): Promise<{ content: string; similarity: number }[]> {
-  const queryEmbedding = await generateEmbedding(query);
+  const queryEmbedding = await generateEmbedding(query, { businessId });
 
   const results = await prisma.$queryRaw<{ content: string; similarity: number }[]>`
     SELECT content, 1 - (embedding <=> ${JSON.stringify(queryEmbedding)}::vector) AS similarity

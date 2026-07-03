@@ -1,4 +1,8 @@
 import { env } from '../config/env';
+import {
+  estimateTokensFromText,
+  recordUsageSafe,
+} from './usage.service';
 
 const EMBEDDING_MODEL = 'gemini-embedding-001';
 const EMBEDDING_DIMENSIONS = 768;
@@ -13,7 +17,10 @@ interface GeminiEmbedResponse {
  * Uses gemini-embedding-001 (text-embedding-004 was deprecated Jan 2026).
  * outputDimensionality=768 matches our pgvector column size.
  */
-export async function generateEmbedding(text: string): Promise<number[]> {
+export async function generateEmbedding(
+  text: string,
+  options?: { businessId?: string }
+): Promise<number[]> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${env.geminiApiKey}`;
 
   const response = await fetch(url, {
@@ -35,6 +42,17 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   const values = data.embedding?.values;
   if (!values?.length) {
     throw new Error('Gemini embedding returned no values');
+  }
+
+  if (options?.businessId) {
+    const tokens = estimateTokensFromText(text);
+    recordUsageSafe({
+      businessId: options.businessId,
+      type: 'EMBEDDING',
+      model: EMBEDDING_MODEL,
+      promptTokens: tokens,
+      outputTokens: 0,
+    });
   }
 
   return values;

@@ -13,24 +13,65 @@ datasource db {
 
 // ─── BUSINESS (tenant) ───────────────────────────────────────────
 model Business {
-  id           String   @id @default(cuid())
+  id           String         @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String         @unique
   password     String
-  widgetKey    String   @unique @default(cuid()) // used to identify which business the widget belongs to
-  plan         Plan     @default(FREE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  widgetKey    String         @unique @default(cuid()) // used to identify which business the widget belongs to
+  plan         Plan           @default(FREE)
+  status       BusinessStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   agents        Agent[]
   documents     Document[]
   conversations Conversation[]
   settings      BusinessSettings?
+  usageEvents   UsageEvent[]
 }
 
 enum Plan {
   FREE
   PRO
+}
+
+enum BusinessStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+// ─── PLATFORM ADMIN (owner) ────────────────────────────────────────
+model PlatformAdmin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+// ─── USAGE EVENT (metering) ──────────────────────────────────────
+model UsageEvent {
+  id             String    @id @default(cuid())
+  businessId     String
+  type           UsageType
+  model          String?
+  promptTokens   Int       @default(0)
+  outputTokens   Int       @default(0)
+  totalTokens    Int       @default(0)
+  estimatedCost  Float     @default(0)
+  conversationId String?
+  createdAt      DateTime  @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+  @@index([type, createdAt])
+}
+
+enum UsageType {
+  AI_MESSAGE
+  EMBEDDING
+  WIDGET_LOAD
 }
 
 // ─── BUSINESS SETTINGS ───────────────────────────────────────────
@@ -41,8 +82,20 @@ model BusinessSettings {
   widgetPosition      String   @default("bottom-right")
   welcomeMessage      String   @default("Hi! How can I help you today?")
   agentName           String   @default("Support Assistant")
-  confidenceThreshold Float    @default(0.7) // below this score, escalate to human
-  business            Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  confidenceThreshold Float    @default(0.7)
+
+  launcherImageUrl String?
+  avatarImageUrl   String?
+  bubbleShape      String   @default("round")
+  bubbleSize       String   @default("medium")
+  themeMode        String   @default("light")
+  headerTitle      String?
+  launcherText     String?
+  offlineMessage   String   @default("We're offline right now, but leave a message!")
+  showBranding     Boolean  @default(true)
+  quickReplies     String[] @default([])
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 }
 
 // ─── SUPPORT AGENT (employee of business) ────────────────────────

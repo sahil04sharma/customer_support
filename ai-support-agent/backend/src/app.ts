@@ -12,6 +12,7 @@ import businessRoutes from './routes/business.routes';
 import conversationRoutes from './routes/conversation.routes';
 import documentRoutes from './routes/document.routes';
 import widgetRoutes from './routes/widget.routes';
+import adminRoutes from './routes/admin.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -49,6 +50,7 @@ export function createApp(): Express {
   app.use('/api/conversations', apiLimiter, conversationRoutes);
   app.use('/api/agent', apiLimiter, agentRoutes);
   app.use('/api/business', apiLimiter, businessRoutes);
+  app.use('/api/admin', authLimiter, adminRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
