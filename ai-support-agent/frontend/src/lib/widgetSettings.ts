@@ -14,6 +14,8 @@ export interface WidgetSettingsForm {
   offlineMessage: string;
   showBranding: boolean;
   quickReplies: string[];
+  aiLanguage: string;
+  aiPersona: string;
 }
 
 export const DEFAULT_WIDGET_SETTINGS: WidgetSettingsForm = {
@@ -32,6 +34,8 @@ export const DEFAULT_WIDGET_SETTINGS: WidgetSettingsForm = {
   offlineMessage: "We're offline right now, but leave a message!",
   showBranding: true,
   quickReplies: [],
+  aiLanguage: 'en',
+  aiPersona: 'friendly and professional',
 };
 
 export interface ThemePreset {
@@ -94,6 +98,8 @@ export function normalizeSettings(raw: Record<string, unknown>): WidgetSettingsF
     offlineMessage: String(raw.offlineMessage ?? DEFAULT_WIDGET_SETTINGS.offlineMessage),
     showBranding: raw.showBranding !== false,
     quickReplies: Array.isArray(raw.quickReplies) ? (raw.quickReplies as string[]) : [],
+    aiLanguage: String(raw.aiLanguage ?? DEFAULT_WIDGET_SETTINGS.aiLanguage),
+    aiPersona: String(raw.aiPersona ?? DEFAULT_WIDGET_SETTINGS.aiPersona),
   };
 }
 

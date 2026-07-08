@@ -54,6 +54,20 @@ export function requireAgent(req: Request, res: Response, next: NextFunction): v
   });
 }
 
+export function requireBusinessOrAgent(req: Request, res: Response, next: NextFunction): void {
+  requireAuth(req, res, (err) => {
+    if (err) {
+      next(err);
+      return;
+    }
+    if (req.auth?.role !== 'BUSINESS' && req.auth?.role !== 'AGENT') {
+      next(new AppError(403, 'Access denied'));
+      return;
+    }
+    next();
+  });
+}
+
 export function requireSuperAdmin(req: Request, res: Response, next: NextFunction): void {
   requireAuth(req, res, async (err) => {
     if (err) {

@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import type { WidgetMessage, WidgetSettings } from './lib/api';
-import { displayHeaderTitle } from './lib/api';
+import { displayHeaderTitle, rateConversation } from './lib/api';
 import { sendCustomerMessage, useWidgetSocket } from './hooks/useWidgetSocket';
 import './widget.css';
 
@@ -30,6 +30,10 @@ export default function ChatWindow({
   const [isTyping, setIsTyping] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [resolved, setResolved] = useState(false);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
+  const [ratingSending, setRatingSending] = useState(false);
   const [quickRepliesVisible, setQuickRepliesVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const positionClass = settings.widgetPosition === 'bottom-left' ? 'position-left' : 'position-right';
@@ -179,6 +183,15 @@ export default function ChatWindow({
     sendMessage(text);
   }
 
+  function handleSubmitRating() {
+    if (!selectedRating || ratingSubmitted) return;
+    setRatingSending(true);
+    void rateConversation(conversationId, selectedRating, feedback.trim() || undefined)
+      .then(() => setRatingSubmitted(true))
+      .catch(() => setRatingSubmitted(true))
+      .finally(() => setRatingSending(false));
+  }
+
   const showQuickReplies =
     quickRepliesVisible &&
     quickReplies.length > 0 &&
@@ -233,6 +246,44 @@ export default function ChatWindow({
         )}
         {isTyping && !escalated && (
           <div className="widget-chat-typing">{settings.agentName} is typing...</div>
+        )}
+        {resolved && !ratingSubmitted && (
+          <div className="widget-csat">
+            <p className="widget-csat-label">How was your experience?</p>
+            <div className="widget-csat-stars">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className={`widget-csat-star${selectedRating >= star ? ' active' : ''}`}
+                  onClick={() => setSelectedRating(star)}
+                  aria-label={`Rate ${star} stars`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              className="widget-csat-feedback"
+              placeholder="Optional feedback"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              maxLength={500}
+            />
+            <button
+              type="button"
+              className="widget-csat-submit"
+              style={{ backgroundColor: settings.widgetColor }}
+              disabled={!selectedRating || ratingSending}
+              onClick={handleSubmitRating}
+            >
+              {ratingSending ? 'Sending…' : 'Submit rating'}
+            </button>
+          </div>
+        )}
+        {ratingSubmitted && (
+          <div className="widget-chat-message system">Thanks for your feedback!</div>
         )}
         <div ref={messagesEndRef} />
       </div>

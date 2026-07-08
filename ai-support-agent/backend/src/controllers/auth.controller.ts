@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 import { AppError } from '../middleware/error.middleware';
 import { prisma } from '../lib/prisma';
+import { redis, redisKeys } from '../lib/redis';
+import { env } from '../config/env';
 import {
   hashPassword,
   issueTokens,
@@ -9,11 +12,14 @@ import {
   verifyPassword,
   verifyRefreshToken,
 } from '../services/auth.service';
+import { sendPasswordResetEmail, sendWelcomeEmail, sendEmailSafe } from '../services/email.service';
 import {
+  forgotPasswordSchema,
   loginSchema,
   logoutSchema,
   refreshSchema,
   registerBusinessSchema,
+  resetPasswordSchema,
 } from '../validation/auth.schema';
 
 function omitPassword<T extends { password: string }>(entity: T): Omit<T, 'password'> {
@@ -54,6 +60,8 @@ export async function registerBusiness(req: Request, res: Response): Promise<voi
     refreshToken,
     business: omitPassword(business),
   });
+
+  sendEmailSafe(() => sendWelcomeEmail(business.email, business.name));
 }
 
 export async function loginBusiness(req: Request, res: Response): Promise<void> {
@@ -146,4 +154,38 @@ export async function logout(req: Request, res: Response): Promise<void> {
 
   await revokeRefreshToken(payload.sub);
   res.json({ message: 'Logged out' });
+}
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const body = forgotPasswordSchema.parse(req.body);
+
+  const business = await prisma.business.findUnique({ where: { email: body.email } });
+
+  // Always return success to avoid email enumeration
+  if (business) {
+    const token = crypto.randomBytes(32).toString('hex');
+    await redis.set(redisKeys.passwordReset(token), business.id, { ex: 3600 });
+    const resetUrl = `${env.clientUrl}/reset-password?token=${token}`;
+    sendEmailSafe(() => sendPasswordResetEmail(business.email, resetUrl));
+  }
+
+  res.json({ message: 'If that email exists, a reset link has been sent.' });
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const body = resetPasswordSchema.parse(req.body);
+
+  const businessId = await redis.get<string>(redisKeys.passwordReset(body.token));
+  if (!businessId) {
+    throw new AppError(400, 'Invalid or expired reset link');
+  }
+
+  const hashed = await hashPassword(body.password);
+  await prisma.business.update({
+    where: { id: businessId },
+    data: { password: hashed },
+  });
+  await redis.del(redisKeys.passwordReset(body.token));
+
+  res.json({ message: 'Password updated. You can sign in now.' });
 }

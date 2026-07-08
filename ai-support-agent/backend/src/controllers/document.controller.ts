@@ -7,6 +7,7 @@ import { prisma } from '../lib/prisma';
 import { processDocument } from '../services/documentProcessor';
 import { extractText } from '../services/pdfExtractor';
 import { computeReadinessLevel } from '../services/knowledgeReadiness.service';
+import { assertCanUploadDocument } from '../services/plan.service';
 import { logError } from '../utils/safeLog';
 
 const ALLOWED_MIMETYPES = ['application/pdf', 'text/plain'] as const;
@@ -60,7 +61,13 @@ export async function uploadDocumentHandler(req: Request, res: Response): Promis
   }
 
   const businessId = req.auth!.businessId;
-  const fileUrl = await uploadDocument(req.file.buffer, req.file.originalname);
+  await assertCanUploadDocument(businessId);
+
+  const fileUrl = await uploadDocument(
+    req.file.buffer,
+    req.file.originalname,
+    businessId
+  );
 
   const document = await prisma.document.create({
     data: {

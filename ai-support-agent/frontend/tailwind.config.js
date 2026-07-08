@@ -4,29 +4,70 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
-        brand: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
+        ink: {
+          DEFAULT: '#0c1222',
+          50: '#f4f6f9',
+          100: '#e8ecf2',
+          200: '#cdd5e3',
+          300: '#a3b0c7',
+          400: '#7488a5',
+          500: '#556a8a',
+          600: '#425370',
+          700: '#36445c',
+          800: '#2f3a4e',
+          900: '#1a2233',
+          950: '#0c1222',
         },
-        surface: {
-          DEFAULT: '#ffffff',
-          muted: '#fafafa',
-          border: '#e4e4e7',
+        accent: {
+          DEFAULT: '#0d9488',
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',
+          600: '#0d9488',
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
         },
+        paper: '#f6f5f2',
+        'paper-warm': '#faf9f7',
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
-        elevated: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+        card: '0 1px 2px rgb(12 18 34 / 0.04), 0 4px 16px rgb(12 18 34 / 0.04)',
+        'card-hover': '0 4px 8px rgb(12 18 34 / 0.06), 0 12px 32px rgb(12 18 34 / 0.08)',
+        sidebar: '4px 0 24px rgb(12 18 34 / 0.04)',
+        glow: '0 0 0 1px rgb(13 148 136 / 0.12), 0 8px 24px rgb(13 148 136 / 0.12)',
       },
       borderRadius: {
-        xl: '0.75rem',
-        '2xl': '1rem',
+        xl: '0.875rem',
+        '2xl': '1.125rem',
+        '3xl': '1.5rem',
+      },
+      backgroundImage: {
+        'mesh-auth':
+          'radial-gradient(ellipse 80% 60% at 20% 40%, rgb(13 148 136 / 0.35), transparent 55%), radial-gradient(ellipse 60% 50% at 80% 20%, rgb(20 184 166 / 0.2), transparent 50%), radial-gradient(ellipse 50% 40% at 60% 90%, rgb(15 118 110 / 0.25), transparent 50%)',
+        'mesh-subtle':
+          'radial-gradient(ellipse 70% 50% at 100% 0%, rgb(13 148 136 / 0.06), transparent 50%), radial-gradient(ellipse 50% 40% at 0% 100%, rgb(12 18 34 / 0.03), transparent 50%)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.4s ease-out',
+        'slide-up': 'slideUp 0.45s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
     },
   },

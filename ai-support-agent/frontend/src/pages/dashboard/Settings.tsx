@@ -164,15 +164,16 @@ export default function Settings() {
         description="Customize how the chat widget looks and behaves on your website."
       />
 
-      <div className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50/80 px-5 py-4">
-        <p className="text-sm font-medium text-zinc-900">Make it yours</p>
-        <p className="mt-1 text-sm text-zinc-500">
-          Use the live preview on the right, then{' '}
-          <Link to="/dashboard/test" className="font-medium text-zinc-700 underline hover:text-zinc-900">
-            test the real widget
-          </Link>{' '}
-          before installing.
-        </p>
+      <div className="card-muted mb-8 flex flex-wrap items-center justify-between gap-4 px-6 py-5">
+        <div>
+          <p className="font-semibold text-ink-900">Make it yours</p>
+          <p className="mt-1 text-sm text-ink-500">
+            Use the live preview on the right, then test before installing.
+          </p>
+        </div>
+        <Link to="/dashboard/test" className="btn-secondary gap-1.5 text-sm">
+          Test widget
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -395,6 +396,38 @@ export default function Settings() {
 
             <div className="card space-y-5 p-6">
               <SectionHeader title="AI behavior" />
+              <div>
+                <label className="label">Response language</label>
+                <select
+                  value={settings.aiLanguage}
+                  onChange={(e) => update({ aiLanguage: e.target.value })}
+                  className="input-field"
+                >
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="hi">Hindi</option>
+                  <option value="ar">Arabic</option>
+                  <option value="ja">Japanese</option>
+                  <option value="zh">Chinese</option>
+                </select>
+              </div>
+              <div>
+                <label className="label">AI tone / persona</label>
+                <input
+                  type="text"
+                  value={settings.aiPersona}
+                  onChange={(e) => update({ aiPersona: e.target.value })}
+                  placeholder="friendly and professional"
+                  maxLength={200}
+                  className="input-field"
+                />
+                <p className="mt-1 text-xs text-zinc-500">
+                  How the assistant should sound — e.g. &quot;warm and concise&quot; or &quot;formal and technical&quot;.
+                </p>
+              </div>
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="label mb-0">Escalation threshold</label>

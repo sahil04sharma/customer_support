@@ -353,3 +353,71 @@
 .widget-launcher-wrap .widget-bubble.position-left {
   position: static;
 }
+
+.widget-csat {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f4f4f5;
+  text-align: center;
+}
+
+.widget-csat-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3f3f46;
+}
+
+.widget-csat-stars {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.widget-csat-star {
+  border: none;
+  background: none;
+  font-size: 22px;
+  color: #d4d4d8;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.widget-csat-star.active {
+  color: #f59e0b;
+}
+
+.widget-csat-feedback {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.widget-csat-submit {
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.widget-csat-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.theme-dark .widget-csat {
+  background: #27272a;
+}
+
+.theme-dark .widget-csat-label {
+  color: #e4e4e7;
+}

@@ -26,9 +26,17 @@ export const redis = {
   set: (key: string, value: string, opts?: { ex: number }) =>
     getRedisClient().set(key, value, opts),
   del: (key: string) => getRedisClient().del(key),
+  incr: (key: string) => getRedisClient().incr(key),
+  expire: (key: string, seconds: number) => getRedisClient().expire(key, seconds),
 };
 
 export const redisKeys = {
   refreshToken: (subjectId: string) => `refresh:${subjectId}`,
   agentPresence: (agentId: string) => `presence:agent:${agentId}`,
+  widgetSessionMessages: (sessionId: string) => `widget:session:msg:${sessionId}`,
+  widgetBusinessMessages: (businessId: string) => `widget:biz:msg:${businessId}`,
+  widgetIpMessages: (ipHash: string) => `widget:ip:msg:${ipHash}`,
+  passwordReset: (token: string) => `pwdreset:${token}`,
+  planLimitNotified: (businessId: string, periodKey: string) =>
+    `plan:notify:${businessId}:${periodKey}`,
 };

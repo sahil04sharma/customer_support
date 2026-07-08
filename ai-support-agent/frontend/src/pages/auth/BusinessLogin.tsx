@@ -36,11 +36,7 @@ export default function BusinessLogin() {
   return (
     <AuthLayout title="Welcome back" subtitle="Sign in to your business dashboard">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert-error">{error}</div>}
         <div>
           <label htmlFor="email" className="label">Work email</label>
           <input
@@ -54,7 +50,12 @@ export default function BusinessLogin() {
           />
         </div>
         <div>
-          <label htmlFor="password" className="label">Password</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="password" className="label">Password</label>
+            <Link to="/forgot-password" className="text-xs font-semibold text-accent-700 hover:text-accent-800">
+              Forgot password?
+            </Link>
+          </div>
           <input
             id="password"
             type="password"
@@ -68,9 +69,9 @@ export default function BusinessLogin() {
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-ink-500">
           Don&apos;t have an account?{' '}
-          <Link to="/register" className="font-medium text-zinc-900 hover:underline">
+          <Link to="/register" className="font-semibold text-accent-700 hover:text-accent-800">
             Create one
           </Link>
         </p>

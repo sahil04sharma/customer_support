@@ -1,31 +1,27 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Bot, Headphones, Send, User } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
+import {
+  ArrowLeft,
+  Download,
+  Send,
+} from 'lucide-react';
+import ChatThread, { type ChatMessage } from '../../components/chat/ChatThread';
 import Badge from '../../components/ui/Badge';
+import CannedResponsePicker from '../../components/CannedResponsePicker';
 import { api } from '../../lib/api';
 import { useSocket } from '../../hooks/useSocket';
-
-interface Message {
-  id: string;
-  role: string;
-  content: string;
-  confidence: number | null;
-  createdAt: string;
-}
 
 interface ConversationDetailData {
   id: string;
   status: string;
   handedOff: boolean;
-  messages: Message[];
+  customerName: string | null;
+  customerEmail: string | null;
+  rating: number | null;
+  feedback: string | null;
+  createdAt: string;
+  messages: ChatMessage[];
 }
-
-const roleConfig: Record<string, { label: string; icon: typeof User; bubble: string; align: string }> = {
-  CUSTOMER: { label: 'Customer', icon: User, bubble: 'bg-zinc-900 text-white', align: 'mr-auto max-w-[80%]' },
-  AI: { label: 'AI Assistant', icon: Bot, bubble: 'bg-zinc-100 text-zinc-900', align: 'ml-auto max-w-[80%]' },
-  AGENT: { label: 'You (Support)', icon: Headphones, bubble: 'bg-emerald-50 text-emerald-900 ring-1 ring-emerald-100', align: 'ml-auto max-w-[80%]' },
-};
 
 export default function ConversationDetail() {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +45,7 @@ export default function ConversationDetail() {
 
     emit('join_conversation', { conversationId: id });
 
-    const appendMessage = (msg: Message) => {
+    const appendMessage = (msg: ChatMessage) => {
       setConversation((prev) => {
         if (!prev || prev.id !== id) return prev;
         if (prev.messages.some((m) => m.id === msg.id)) return prev;
@@ -72,7 +68,7 @@ export default function ConversationDetail() {
     const unsubAgent = on('agent_response', (data: unknown) => {
       const { conversationId, message } = data as {
         conversationId: string;
-        message: Message;
+        message: ChatMessage;
       };
       if (conversationId !== id) return;
       appendMessage(message);
@@ -81,7 +77,7 @@ export default function ConversationDetail() {
     const unsubAi = on('ai_response', (data: unknown) => {
       const { conversationId, message } = data as {
         conversationId: string;
-        message: Message;
+        message: ChatMessage;
       };
       if (conversationId !== id) return;
       appendMessage(message);
@@ -98,8 +94,7 @@ export default function ConversationDetail() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages]);
 
-  async function handleReply(e: FormEvent) {
-    e.preventDefault();
+  async function sendReply() {
     if (!id || !input.trim() || sending) return;
 
     setSending(true);
@@ -123,97 +118,115 @@ export default function ConversationDetail() {
     }
   }
 
+  async function handleReply(e: FormEvent) {
+    e.preventDefault();
+    await sendReply();
+  }
+
+  async function handleExport() {
+    if (!id) return;
+    const res = await api.get(`/api/conversations/${id}/export`, { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-${id.slice(0, 8)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (!conversation) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ink-200 border-t-accent-600" />
       </div>
     );
   }
 
   const canReply = conversation.status !== 'RESOLVED';
+  const displayName = conversation.customerName ?? 'Anonymous visitor';
+  const initials = displayName[0]?.toUpperCase() ?? '?';
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
-      <div className="shrink-0">
-        <Link
-          to="/dashboard/conversations"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to conversations
-        </Link>
-
-        <PageHeader
-          title="Conversation"
-          description={
-            canReply
-              ? 'Reply below — your message is sent live to the customer in the widget.'
-              : `Status: ${conversation.status}`
-          }
-          action={
-            <Badge variant={conversation.status === 'RESOLVED' ? 'success' : 'info'}>
-              {conversation.status}
-            </Badge>
-          }
-        />
-      </div>
+    <div className="flex h-[calc(100vh-6rem)] flex-col">
+      <Link
+        to="/dashboard/conversations"
+        className="mb-3 inline-flex items-center gap-1 text-xs text-ink-500 hover:text-ink-900"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back
+      </Link>
 
       <div className="card flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-5">
-            {conversation.messages.map((msg) => {
-              const config = roleConfig[msg.role] ?? roleConfig.AI;
-              const Icon = config.icon;
-              const isCustomer = msg.role === 'CUSTOMER';
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-ink-200 px-4 py-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-200 text-xs font-medium text-ink-600">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-sm font-medium text-ink-900">{displayName}</h1>
+              <p className="truncate text-xs text-ink-500">
+                {conversation.customerEmail ?? `#${conversation.id.slice(0, 8)}`}
+              </p>
+            </div>
+          </div>
 
-              return (
-                <div key={msg.id} className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}>
-                  <div className={`mb-1.5 flex items-center gap-1.5 text-xs font-medium text-zinc-500 ${isCustomer ? '' : 'flex-row-reverse'}`}>
-                    <Icon className="h-3.5 w-3.5" />
-                    {config.label}
-                    <span className="text-zinc-300">·</span>
-                    <span className="font-normal">
-                      {new Date(msg.createdAt).toLocaleTimeString(undefined, {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                  <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${config.bubble} ${config.align}`}>
-                    {msg.content}
-                  </div>
-                  {msg.confidence != null && (
-                    <p className="mt-1 text-xs text-zinc-400">
-                      AI confidence: {(msg.confidence * 100).toFixed(0)}%
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-            <div ref={messagesEndRef} />
+          <div className="flex shrink-0 items-center gap-2">
+            {conversation.rating != null && (
+              <span className="text-xs text-ink-500">★ {conversation.rating}/5</span>
+            )}
+            <button type="button" onClick={handleExport} className="btn-ghost px-2 py-1 text-xs">
+              <Download className="h-3.5 w-3.5" />
+            </button>
+            <Badge variant={conversation.status === 'RESOLVED' ? 'success' : conversation.status === 'ESCALATED' ? 'warning' : 'info'}>
+              {conversation.status}
+            </Badge>
           </div>
         </div>
 
-        {canReply && (
-          <form onSubmit={handleReply} className="border-t border-zinc-100 bg-zinc-50/80 p-4">
-            <div className="flex gap-3">
-              <input
+        {conversation.feedback && (
+          <div className="shrink-0 border-b border-ink-100 bg-ink-50 px-4 py-2 text-xs text-ink-600">
+            Feedback: {conversation.feedback}
+          </div>
+        )}
+
+        {/* Messages */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ChatThread messages={conversation.messages} endRef={messagesEndRef} />
+        </div>
+
+        {/* Composer */}
+        {canReply ? (
+          <form onSubmit={handleReply} className="chat-composer">
+            <div className="mb-2">
+              <CannedResponsePicker
+                onInsert={(content) => setInput((prev) => (prev ? `${prev}\n${content}` : content))}
+                className="input-field max-w-xs text-xs"
+              />
+            </div>
+            <div className="flex gap-2">
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="input-field flex-1"
-                placeholder="Type your reply to the customer…"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    void sendReply();
+                  }
+                }}
+                rows={2}
+                className="input-field flex-1 resize-none"
+                placeholder="Reply to customer…"
                 disabled={sending}
               />
-              <button type="submit" className="btn-primary gap-2 px-5" disabled={sending || !input.trim()}>
+              <button type="submit" className="btn-primary self-end px-3" disabled={sending || !input.trim()}>
                 <Send className="h-4 w-4" />
-                Send
               </button>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              Tip: open the widget test page in another tab to see replies appear live.
-            </p>
           </form>
+        ) : (
+          <div className="chat-composer text-center text-xs text-ink-500">
+            Conversation resolved.
+          </div>
         )}
       </div>
     </div>

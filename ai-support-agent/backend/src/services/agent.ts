@@ -1,10 +1,7 @@
-import Groq from 'groq-sdk';
-import { env } from '../config/env';
+import { completeChat } from './ai/chat.service';
 import { prisma } from '../lib/prisma';
 import { searchKnowledgeBase } from './vectorSearch';
 import { recordUsageSafe } from './usage.service';
-
-const GROQ_MODEL = 'llama-3.1-8b-instant';
 
 export interface AgentResponse {
   answer: string;
@@ -12,8 +9,6 @@ export interface AgentResponse {
   shouldEscalate: boolean;
   sources: string[];
 }
-
-const groq = new Groq({ apiKey: env.groqApiKey });
 
 export async function runAgent(
   query: string,
@@ -25,6 +20,8 @@ export async function runAgent(
     where: { businessId },
   });
   const confidenceThreshold = settings?.confidenceThreshold ?? 0.7;
+  const aiLanguage = settings?.aiLanguage ?? 'en';
+  const aiPersona = settings?.aiPersona ?? 'friendly and professional';
 
   const relevantChunks = await searchKnowledgeBase(query, businessId, 5);
   const topSimilarity = relevantChunks[0]?.similarity ?? 0;
@@ -33,7 +30,8 @@ export async function runAgent(
     .map((chunk, i) => `[Source ${i + 1}]: ${chunk.content}`)
     .join('\n\n');
 
-  const systemPrompt = `You are a helpful customer support assistant. 
+  const systemPrompt = `You are a helpful customer support assistant for this business.
+Respond in ${languageLabel(aiLanguage)} with a ${aiPersona} tone.
 Answer the customer's question using ONLY the information provided in the context below.
 If the context does not contain enough information to answer confidently, say exactly: "I need to connect you with a human agent who can better help you."
 Do not make up information. Be concise and friendly.
@@ -50,7 +48,7 @@ ${context}`;
   const queryAlreadyInHistory =
     last?.role === 'CUSTOMER' && last.content === query;
 
-  const messages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
+  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
     { role: 'system', content: systemPrompt },
     ...historyMessages,
   ];
@@ -58,28 +56,22 @@ ${context}`;
   if (!queryAlreadyInHistory) {
     messages.push({ role: 'user', content: query });
   }
-  const response = await groq.chat.completions.create({
-    model: GROQ_MODEL,
-    messages,
-    max_tokens: 500,
-    temperature: 0.3,
-  });
 
-  const usage = response.usage;
-  recordUsageSafe({
-    businessId,
-    type: 'AI_MESSAGE',
-    model: GROQ_MODEL,
-    promptTokens: usage?.prompt_tokens ?? 0,
-    outputTokens: usage?.completion_tokens ?? 0,
-    conversationId: options?.conversationId,
-  });
+  const response = await completeChat(businessId, messages);
 
-  const answer = response.choices[0].message.content ?? '';
+  if (response.billingSource === 'platform') {
+    recordUsageSafe({
+      businessId,
+      type: 'AI_MESSAGE',
+      model: response.model,
+      promptTokens: response.promptTokens,
+      outputTokens: response.outputTokens,
+      conversationId: options?.conversationId,
+    });
+  }
 
-  // Only escalate when the AI explicitly can't help or there is no useful KB match.
-  // Do NOT escalate just because similarity is below threshold when the AI already
-  // answered from context (common with embedding score variance).
+  const answer = response.content;
+
   const explicitHandoff = /i need to connect you with a human agent/i.test(answer);
   const noUsefulContext =
     relevantChunks.length === 0 || topSimilarity < 0.35;
@@ -93,4 +85,20 @@ ${context}`;
     shouldEscalate,
     sources: relevantChunks.map((c) => c.content.slice(0, 100)),
   };
+}
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  en: 'English',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
+  hi: 'Hindi',
+  ar: 'Arabic',
+  ja: 'Japanese',
+  zh: 'Chinese',
+};
+
+function languageLabel(code: string): string {
+  return LANGUAGE_LABELS[code] ?? code;
 }

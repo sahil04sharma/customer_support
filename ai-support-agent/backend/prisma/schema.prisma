@@ -17,8 +17,9 @@ model Business {
   name         String
   email        String         @unique
   password     String
-  widgetKey    String         @unique @default(cuid()) // used to identify which business the widget belongs to
-  plan         Plan           @default(FREE)
+  widgetKey       String         @unique @default(cuid()) // public embed identifier
+  allowedDomains  String[]       @default([]) // empty = allow all origins; else hostname allowlist
+  plan            Plan           @default(FREE)
   status       BusinessStatus @default(ACTIVE)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -26,8 +27,9 @@ model Business {
   agents        Agent[]
   documents     Document[]
   conversations Conversation[]
-  settings      BusinessSettings?
-  usageEvents   UsageEvent[]
+  settings        BusinessSettings?
+  usageEvents     UsageEvent[]
+  cannedResponses CannedResponse[]
 }
 
 enum Plan {
@@ -95,7 +97,35 @@ model BusinessSettings {
   showBranding     Boolean  @default(true)
   quickReplies     String[] @default([])
 
+  aiLanguage String @default("en")
+  aiPersona  String @default("friendly and professional")
+
+  // AI provider config (BYOK)
+  chatMode            String  @default("platform") // platform | byok
+  chatProvider        String? // openai | anthropic | groq | google
+  chatApiKeyEnc       String?
+  chatModel           String?
+  embedMode           String  @default("platform")
+  embedProvider       String? // openai | google
+  embedApiKeyEnc      String?
+  embedModel          String?
+  embedConfigVersion  Int     @default(1)
+
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+// ─── CANNED RESPONSE (agent macros) ──────────────────────────────
+model CannedResponse {
+  id         String   @id @default(cuid())
+  businessId String
+  title      String
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
 }
 
 // ─── SUPPORT AGENT (employee of business) ────────────────────────
@@ -155,6 +185,9 @@ model Conversation {
   customerEmail String?
   status        ConversationStatus @default(OPEN)
   handedOff     Boolean            @default(false) // true when AI escalated to human
+  rating        Int?
+  feedback      String?
+  ratedAt       DateTime?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 

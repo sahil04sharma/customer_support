@@ -1,67 +1,44 @@
-import { env } from '../config/env';
-import {
-  estimateTokensFromText,
-  recordUsageSafe,
-} from './usage.service';
-
-const EMBEDDING_MODEL = 'gemini-embedding-001';
-const EMBEDDING_DIMENSIONS = 768;
-
-interface GeminiEmbedResponse {
-  embedding?: { values?: number[] };
-  error?: { message?: string };
-}
+import { createEmbedding } from './ai/embedding.service';
+import { recordUsageSafe, estimateTokensFromText } from './usage.service';
 
 /**
- * Generate a text embedding via the Gemini API.
- * Uses gemini-embedding-001 (text-embedding-004 was deprecated Jan 2026).
- * outputDimensionality=768 matches our pgvector column size.
+ * Generate a text embedding for RAG (768 dimensions).
+ * Routes to the tenant's configured provider or platform default.
  */
 export async function generateEmbedding(
   text: string,
   options?: { businessId?: string }
 ): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${env.geminiApiKey}`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text }] },
-      outputDimensionality: EMBEDDING_DIMENSIONS,
-    }),
-  });
-
-  const data = (await response.json()) as GeminiEmbedResponse;
-
-  if (!response.ok) {
-    const message = data.error?.message ?? response.statusText;
-    throw new Error(`Gemini embedding failed (${response.status}): ${message}`);
+  const businessId = options?.businessId;
+  if (!businessId) {
+    throw new Error('businessId is required for embeddings');
   }
 
-  const values = data.embedding?.values;
-  if (!values?.length) {
-    throw new Error('Gemini embedding returned no values');
-  }
+  const result = await createEmbedding(businessId, text);
 
-  if (options?.businessId) {
-    const tokens = estimateTokensFromText(text);
+  if (result.billingSource === 'platform') {
     recordUsageSafe({
-      businessId: options.businessId,
+      businessId,
       type: 'EMBEDDING',
-      model: EMBEDDING_MODEL,
-      promptTokens: tokens,
+      model: result.model,
+      promptTokens: result.promptTokens,
       outputTokens: 0,
     });
   }
 
-  return values;
+  return result.values;
 }
 
-export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+export async function generateEmbeddings(
+  texts: string[],
+  businessId: string
+): Promise<number[][]> {
   const embeddings: number[][] = [];
   for (const text of texts) {
-    embeddings.push(await generateEmbedding(text));
+    embeddings.push(await generateEmbedding(text, { businessId }));
   }
   return embeddings;
 }
+
+/** @deprecated use estimateTokensFromText from usage.service */
+export { estimateTokensFromText };

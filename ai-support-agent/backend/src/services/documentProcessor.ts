@@ -2,7 +2,10 @@ import cuid from 'cuid';
 import { prisma } from '../lib/prisma';
 import { chunkText } from './chunker';
 import { generateEmbedding } from './embeddings';
+import { mapWithConcurrency } from '../utils/concurrency';
 import { logError } from '../utils/safeLog';
+
+const EMBED_CONCURRENCY = 4;
 
 export async function processDocument(
   documentId: string,
@@ -16,8 +19,8 @@ export async function processDocument(
       throw new Error('No text content found in document');
     }
 
-    for (let i = 0; i < chunks.length; i++) {
-      const embedding = await generateEmbedding(chunks[i], { businessId });
+    await mapWithConcurrency(chunks, EMBED_CONCURRENCY, async (chunk, i) => {
+      const embedding = await generateEmbedding(chunk, { businessId });
 
       await prisma.$executeRaw`
         INSERT INTO "DocumentChunk" (id, "documentId", "businessId", content, embedding, "chunkIndex", "createdAt")
@@ -25,13 +28,13 @@ export async function processDocument(
           ${cuid()},
           ${documentId},
           ${businessId},
-          ${chunks[i]},
+          ${chunk},
           ${JSON.stringify(embedding)}::vector,
           ${i},
           NOW()
         )
       `;
-    }
+    });
 
     await prisma.document.update({
       where: { id: documentId },

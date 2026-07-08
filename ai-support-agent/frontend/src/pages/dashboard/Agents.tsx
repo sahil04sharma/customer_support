@@ -158,6 +158,92 @@ export default function Agents() {
           ))}
         </div>
       )}
+
+      <div className="card mt-8 p-6">
+        <CannedResponsesManager />
+      </div>
+    </div>
+  );
+}
+
+interface CannedItem {
+  id: string;
+  title: string;
+  content: string;
+}
+
+function CannedResponsesManager() {
+  const [items, setItems] = useState<CannedItem[]>([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+
+  function refresh() {
+    api.get('/api/canned-responses').then((res) => setItems(res.data));
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  async function handleCreate(e: FormEvent) {
+    e.preventDefault();
+    await api.post('/api/canned-responses', { title, content });
+    setTitle('');
+    setContent('');
+    refresh();
+  }
+
+  async function handleDelete(id: string) {
+    await api.delete(`/api/canned-responses/${id}`);
+    refresh();
+  }
+
+  return (
+    <div>
+      <h3 className="font-semibold text-zinc-900">Canned responses</h3>
+      <p className="mt-1 text-sm text-zinc-500">
+        Saved replies your team can insert when handling escalated chats.
+      </p>
+      {items.length > 0 && (
+        <ul className="mt-4 divide-y divide-zinc-100 rounded-lg border border-zinc-200">
+          {items.map((item) => (
+            <li key={item.id} className="flex items-start justify-between gap-4 px-4 py-3">
+              <div>
+                <p className="font-medium text-zinc-900">{item.title}</p>
+                <p className="mt-0.5 text-sm text-zinc-500 line-clamp-2">{item.content}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDelete(item.id)}
+                className="shrink-0 text-sm text-zinc-400 hover:text-red-600"
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={handleCreate} className="mt-4 grid gap-3 sm:grid-cols-2">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title (e.g. Shipping times)"
+          className="input-field"
+          required
+        />
+        <input
+          type="text"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Full reply text"
+          className="input-field sm:col-span-2"
+          required
+        />
+        <button type="submit" className="btn-secondary w-fit text-sm sm:col-span-2">
+          Add canned response
+        </button>
+      </form>
     </div>
   );
 }

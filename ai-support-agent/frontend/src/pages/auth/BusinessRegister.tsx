@@ -8,13 +8,22 @@ export default function BusinessRegister() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeDataProcessing, setAgreeDataProcessing] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuth();
   const navigate = useNavigate();
 
+  const canSubmit = agreeTerms && agreePrivacy && agreeDataProcessing;
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!canSubmit) {
+      setError('Please accept all required agreements to create an account.');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
@@ -41,11 +50,7 @@ export default function BusinessRegister() {
   return (
     <AuthLayout title="Create your account" subtitle="Start supporting customers with AI in minutes">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert-error">{error}</div>}
         <div>
           <label htmlFor="name" className="label">Company name</label>
           <input
@@ -83,12 +88,62 @@ export default function BusinessRegister() {
             required
           />
         </div>
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+
+        <fieldset className="space-y-3 rounded-lg border border-ink-200 bg-ink-50/40 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-ink-500">
+            Required agreements
+          </legend>
+          <label className="flex cursor-pointer gap-3 text-sm text-ink-700">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              className="mt-0.5 rounded border-ink-300"
+            />
+            <span>
+              I agree to the{' '}
+              <Link to="/terms" target="_blank" className="font-medium text-accent-700 hover:underline">
+                Terms of Service
+              </Link>
+            </span>
+          </label>
+          <label className="flex cursor-pointer gap-3 text-sm text-ink-700">
+            <input
+              type="checkbox"
+              checked={agreePrivacy}
+              onChange={(e) => setAgreePrivacy(e.target.checked)}
+              className="mt-0.5 rounded border-ink-300"
+            />
+            <span>
+              I have read the{' '}
+              <Link to="/privacy" target="_blank" className="font-medium text-accent-700 hover:underline">
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+          <label className="flex cursor-pointer gap-3 text-sm text-ink-700">
+            <input
+              type="checkbox"
+              checked={agreeDataProcessing}
+              onChange={(e) => setAgreeDataProcessing(e.target.checked)}
+              className="mt-0.5 rounded border-ink-300"
+            />
+            <span>
+              I understand how customer chat data is processed when I embed the widget (
+              <Link to="/data" target="_blank" className="font-medium text-accent-700 hover:underline">
+                data & consent
+              </Link>
+              )
+            </span>
+          </label>
+        </fieldset>
+
+        <button type="submit" disabled={loading || !canSubmit} className="btn-primary w-full">
           {loading ? 'Creating account…' : 'Create account'}
         </button>
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-ink-500">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-zinc-900 hover:underline">
+          <Link to="/login" className="font-medium text-ink-900 hover:underline">
             Sign in
           </Link>
         </p>

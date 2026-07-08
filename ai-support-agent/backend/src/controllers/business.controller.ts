@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
 import path from 'path';
 import multer from 'multer';
+import cuid from 'cuid';
 import { AppError } from '../middleware/error.middleware';
 import { uploadWidgetImage } from '../lib/cloudinary';
 import { prisma } from '../lib/prisma';
 import { hashPassword } from '../services/auth.service';
 import { isSettingsCustomized } from '../services/onboarding.service';
+import { assertCanAddAgent, getPlanUsageSummary } from '../services/plan.service';
 import {
   inviteAgentSchema,
+  updateAllowedDomainsSchema,
   updateSettingsSchema,
   widgetImageTypeSchema,
 } from '../validation/business.schema';
@@ -76,8 +79,9 @@ export async function uploadWidgetImageHandler(req: Request, res: Response): Pro
     throw new AppError(400, 'No image uploaded');
   }
 
+  const businessId = req.auth!.businessId;
   const imageType = widgetImageTypeSchema.parse(req.body.type);
-  const url = await uploadWidgetImage(req.file.buffer, req.file.originalname);
+  const url = await uploadWidgetImage(req.file.buffer, req.file.originalname, businessId);
 
   res.status(201).json({ url, type: imageType });
 }
@@ -95,6 +99,37 @@ export async function getWidgetKey(req: Request, res: Response): Promise<void> {
   }
 
   res.json({ widgetKey: business.widgetKey });
+}
+
+export async function rotateWidgetKey(req: Request, res: Response): Promise<void> {
+  const businessId = req.auth!.businessId;
+
+  const business = await prisma.business.update({
+    where: { id: businessId },
+    data: { widgetKey: cuid() },
+    select: { widgetKey: true },
+  });
+
+  res.json({ widgetKey: business.widgetKey });
+}
+
+export async function getPlanUsage(req: Request, res: Response): Promise<void> {
+  const businessId = req.auth!.businessId;
+  const usage = await getPlanUsageSummary(businessId);
+  res.json(usage);
+}
+
+export async function updateAllowedDomains(req: Request, res: Response): Promise<void> {
+  const businessId = req.auth!.businessId;
+  const body = updateAllowedDomainsSchema.parse(req.body);
+
+  const business = await prisma.business.update({
+    where: { id: businessId },
+    data: { allowedDomains: body.allowedDomains },
+    select: { allowedDomains: true },
+  });
+
+  res.json(business);
 }
 
 export async function listAgents(req: Request, res: Response): Promise<void> {
@@ -123,6 +158,8 @@ export async function inviteAgent(req: Request, res: Response): Promise<void> {
   if (existing) {
     throw new AppError(409, 'Agent email already exists');
   }
+
+  await assertCanAddAgent(businessId);
 
   const hashed = await hashPassword(body.password);
 
@@ -179,12 +216,23 @@ export async function getOnboarding(req: Request, res: Response): Promise<void> 
 
 export async function getAnalytics(req: Request, res: Response): Promise<void> {
   const businessId = req.auth!.businessId;
+  const days = Math.min(
+    365,
+    Math.max(1, parseInt(String(req.query.days ?? '30'), 10) || 30)
+  );
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const dateFilter = { gte: since };
 
   const [resolved, escalated, conversations] = await Promise.all([
-    prisma.conversation.count({ where: { businessId, status: 'RESOLVED' } }),
-    prisma.conversation.count({ where: { businessId, status: 'ESCALATED' } }),
+    prisma.conversation.count({
+      where: { businessId, status: 'RESOLVED', updatedAt: dateFilter },
+    }),
+    prisma.conversation.count({
+      where: { businessId, status: 'ESCALATED', updatedAt: dateFilter },
+    }),
     prisma.conversation.findMany({
-      where: { businessId, status: 'RESOLVED' },
+      where: { businessId, status: 'RESOLVED', updatedAt: dateFilter },
       include: {
         messages: { orderBy: { createdAt: 'asc' } },
       },
@@ -211,5 +259,6 @@ export async function getAnalytics(req: Request, res: Response): Promise<void> {
     resolved,
     escalated,
     avgResponseTimeMs,
+    days,
   });
 }

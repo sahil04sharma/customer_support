@@ -5,6 +5,7 @@ import {
   FileText,
   HelpCircle,
   LogOut,
+  KeyRound,
   MessageSquare,
   MessageSquareText,
   Settings,
@@ -16,6 +17,7 @@ const navItems = [
   { to: '/dashboard', label: 'Overview', icon: BarChart3, exact: true },
   { to: '/dashboard/getting-started', label: 'Getting started', icon: HelpCircle },
   { to: '/dashboard/documents', label: 'Knowledge base', icon: FileText },
+  { to: '/dashboard/ai', label: 'AI providers', icon: KeyRound },
   { to: '/dashboard/conversations', label: 'Conversations', icon: MessageSquareText },
   { to: '/dashboard/agents', label: 'Team', icon: Users },
   { to: '/dashboard/settings', label: 'Widget', icon: Settings },
@@ -32,13 +34,13 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
-      <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-zinc-200/80 bg-white">
-        <div className="flex h-16 items-center gap-2.5 border-b border-zinc-200/80 px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900">
-            <MessageSquare className="h-4 w-4 text-white" />
+    <div className="flex min-h-screen bg-paper">
+      <aside className="fixed inset-y-0 left-0 z-30 flex w-56 flex-col border-r border-ink-200/60 bg-white">
+        <div className="flex h-14 items-center gap-2.5 border-b border-ink-100 px-4">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-ink-900">
+            <MessageSquare className="h-3.5 w-3.5 text-white" />
           </div>
-          <span className="font-semibold tracking-tight text-zinc-900">SupportDesk</span>
+          <span className="text-sm font-semibold text-ink-900">SupportDesk</span>
         </div>
 
         <nav className="flex-1 space-y-0.5 p-3">
@@ -49,27 +51,23 @@ export default function DashboardLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-zinc-900 text-white'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-                }`}
+                className={`nav-link ${active ? 'nav-link-active' : ''}`}
               >
-                <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-white' : 'text-zinc-400'}`} />
+                <Icon className={`nav-icon h-4 w-4 shrink-0 ${active ? '' : 'text-ink-400'}`} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-zinc-200/80 p-3">
-          <div className="mb-2 rounded-lg bg-zinc-50 px-3 py-2.5">
-            <p className="truncate text-sm font-medium text-zinc-900">{user?.name}</p>
-            <p className="truncate text-xs text-zinc-500">{user?.email}</p>
+        <div className="border-t border-ink-100 p-3">
+          <div className="mb-2 truncate px-2 py-1.5">
+            <p className="truncate text-sm font-medium text-ink-900">{user?.name}</p>
+            <p className="truncate text-xs text-ink-500">{user?.email}</p>
           </div>
           <button
             onClick={logout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-red-50 hover:text-red-600"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-ink-500 hover:bg-ink-50 hover:text-ink-900"
           >
             <LogOut className="h-4 w-4" />
             Sign out
@@ -77,8 +75,8 @@ export default function DashboardLayout() {
         </div>
       </aside>
 
-      <main className="ml-64 flex-1">
-        <div className="mx-auto max-w-6xl px-8 py-10">
+      <main className="ml-56 flex-1">
+        <div className="mx-auto max-w-5xl px-6 py-8">
           <Outlet />
         </div>
       </main>

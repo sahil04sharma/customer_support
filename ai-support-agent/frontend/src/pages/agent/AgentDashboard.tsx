@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import AuthLayout from '../../components/layout/AuthLayout';
 import Badge from '../../components/ui/Badge';
+import CannedResponsePicker from '../../components/CannedResponsePicker';
 import { api } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocket } from '../../hooks/useSocket';
@@ -38,7 +39,9 @@ export default function AgentDashboard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user || user.role !== 'AGENT') return;
+    if (!user || user.role !== 'AGENT' || !connected) return;
+
+    emit('join_business');
 
     const unsubEscalation = on('new_escalation', (data: unknown) => {
       const { conversationId } = data as Escalation;
@@ -66,7 +69,18 @@ export default function AgentDashboard() {
       unsubEscalation?.();
       unsubResponse?.();
     };
-  }, [user, on, activeConversation]);
+  }, [user, connected, emit, on, activeConversation]);
+
+  useEffect(() => {
+    if (!accessToken || !user || user.role !== 'AGENT') return;
+
+    api.get('/api/agent/conversations').then((res) => {
+      const pending = (res.data as { id: string; agentId: string | null }[])
+        .filter((c) => !c.agentId)
+        .map((c) => c.id);
+      setEscalations(pending);
+    });
+  }, [accessToken, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -85,9 +99,9 @@ export default function AgentDashboard() {
   }
 
   function toggleOnline() {
-    if (!user) return;
+    if (!user || !connected) return;
     if (!isOnline) {
-      emit('agent_online', { agentId: user.id, businessId: user.businessId });
+      emit('agent_online');
       setIsOnline(true);
     } else {
       setIsOnline(false);
@@ -96,32 +110,39 @@ export default function AgentDashboard() {
 
   async function acceptConversation(conversationId: string) {
     if (!user) return;
-    emit('accept_conversation', { conversationId, agentId: user.id });
+    emit('accept_conversation', { conversationId });
     setActiveConversation(conversationId);
     setEscalations((prev) => prev.filter((id) => id !== conversationId));
     const { data } = await api.get(`/api/agent/conversations/${conversationId}`);
     setMessages(data.messages);
   }
 
-  function sendMessage(e: FormEvent) {
+  async function sendMessage(e: FormEvent) {
     e.preventDefault();
     if (!activeConversation || !input.trim()) return;
-    emit('agent_message', { conversationId: activeConversation, content: input });
+
+    const content = input.trim();
+    setInput('');
+
+    const { data } = await api.post('/api/agent/message', {
+      conversationId: activeConversation,
+      content,
+    });
+
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now().toString(),
+        id: data.id,
         role: 'AGENT',
-        content: input,
-        createdAt: new Date().toISOString(),
+        content: data.content,
+        createdAt: data.createdAt,
       },
     ]);
-    setInput('');
   }
 
-  function resolveConversation() {
+  async function resolveConversation() {
     if (!activeConversation) return;
-    emit('resolve_conversation', { conversationId: activeConversation });
+    await api.put(`/api/agent/conversations/${activeConversation}/resolve`);
     setActiveConversation(null);
     setMessages([]);
   }
@@ -264,7 +285,12 @@ export default function AgentDashboard() {
             </div>
 
             <form onSubmit={sendMessage} className="border-t border-zinc-200/80 bg-white p-4">
-              <div className="mx-auto flex max-w-2xl gap-3">
+              <div className="mx-auto max-w-2xl space-y-2">
+                <CannedResponsePicker
+                  onInsert={(text) => setInput((prev) => (prev ? `${prev}\n${text}` : text))}
+                  className="input-field text-sm"
+                />
+                <div className="flex gap-3">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -275,6 +301,7 @@ export default function AgentDashboard() {
                   <Send className="h-4 w-4" />
                   Send
                 </button>
+                </div>
               </div>
             </form>
           </>

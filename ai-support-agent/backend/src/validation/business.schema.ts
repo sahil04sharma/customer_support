@@ -20,9 +20,20 @@ export const updateSettingsSchema = z.object({
   offlineMessage: z.string().min(1).max(300).optional(),
   showBranding: z.boolean().optional(),
   quickReplies: z.array(z.string().min(1).max(80)).max(5).optional(),
+  aiLanguage: z.string().min(2).max(10).optional(),
+  aiPersona: z.string().min(1).max(200).optional(),
 });
 
 export const widgetImageTypeSchema = z.enum(['launcher', 'avatar']);
+
+export const updateAllowedDomainsSchema = z.object({
+  allowedDomains: z
+    .array(z.string().min(1).max(253))
+    .max(20)
+    .transform((domains) =>
+      domains.map((d) => d.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0])
+    ),
+});
 
 export const inviteAgentSchema = z.object({
   name: z.string().min(1),

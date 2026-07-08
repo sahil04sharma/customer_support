@@ -47,11 +47,17 @@ export const env = {
   jwtSecret: optional('JWT_SECRET', 'dev-access-secret-change-me'),
   jwtRefreshSecret: optional('JWT_REFRESH_SECRET', 'dev-refresh-secret-change-me'),
 
+  /** AES key material for encrypting tenant API keys at rest */
+  encryptionKey: optional('ENCRYPTION_KEY', 'dev-encryption-key-change-in-production-32chars'),
+
   cloudinary: {
     cloudName: read('CLOUDINARY_CLOUD_NAME'),
     apiKey: read('CLOUDINARY_API_KEY'),
     apiSecret: read('CLOUDINARY_API_SECRET'),
   },
+
+  resendApiKey: optional('RESEND_API_KEY', ''),
+  emailFrom: optional('EMAIL_FROM', 'SupportDesk <onboarding@resend.dev>'),
 } as const;
 
 /**
@@ -73,6 +79,9 @@ export function validateEnv(): void {
     }
     if (env.jwtRefreshSecret.includes('dev-') || env.jwtRefreshSecret.length < 32) {
       console.warn('[env] JWT_REFRESH_SECRET is weak for production. Use a long random string.');
+    }
+    if (env.encryptionKey.includes('dev-') || env.encryptionKey.length < 32) {
+      console.warn('[env] ENCRYPTION_KEY is weak for production. Use a long random string.');
     }
     if (missing.length > 0) {
       console.warn('[env] Production is missing required environment variables.');
