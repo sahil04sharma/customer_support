@@ -152,8 +152,8 @@ After adding domains:
 |---------|-----|
 | CORS error on login | `CLIENT_URL` must exactly match your Vercel URL (scheme + host, no trailing slash). |
 | `widget.js` 404 | Widget build failed — check Railway build logs. Root directory must be `ai-support-agent` (not `backend`). |
-| DB connection error | Use Supabase **direct** URL (port 5432), not the pooler, for `DATABASE_URL`. |
-| Migrations fail | Run `CREATE EXTENSION IF NOT EXISTS vector;` in Supabase SQL editor first. |
+| Migrations fail `P3005` | DB was created with `db push` — run `npm run prisma:baseline` once against production `DATABASE_URL`, or redeploy (start script auto-baselines). |
+| DB connection error | Use Supabase **direct** URL (`db.xxx.supabase.co:5432`) for `DATABASE_URL`, not the pooler, if migrations keep failing. |
 | Rate limits not working | Confirm Upstash URL + token are set; redeploy. |
 | Weak JWT warning in logs | Replace dev secrets with 32+ char random strings. |
 

@@ -11,6 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
+    "prisma:baseline": "prisma migrate resolve --applied 20250702120000_init && prisma migrate resolve --applied 20250708220000_byok_ai_config",
     "smoke": "node scripts/smoke.mjs",
     "smoke:socket": "node scripts/smoke-socket.mjs"
   },
