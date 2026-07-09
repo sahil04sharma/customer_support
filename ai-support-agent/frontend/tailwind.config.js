@@ -54,10 +54,19 @@ export default {
           'radial-gradient(ellipse 80% 60% at 20% 40%, rgb(13 148 136 / 0.35), transparent 55%), radial-gradient(ellipse 60% 50% at 80% 20%, rgb(20 184 166 / 0.2), transparent 50%), radial-gradient(ellipse 50% 40% at 60% 90%, rgb(15 118 110 / 0.25), transparent 50%)',
         'mesh-subtle':
           'radial-gradient(ellipse 70% 50% at 100% 0%, rgb(13 148 136 / 0.06), transparent 50%), radial-gradient(ellipse 50% 40% at 0% 100%, rgb(12 18 34 / 0.03), transparent 50%)',
+        'hero-glow':
+          'radial-gradient(ellipse 80% 60% at 50% -10%, rgb(13 148 136 / 0.15), transparent 60%), radial-gradient(ellipse 50% 40% at 90% 80%, rgb(20 184 166 / 0.08), transparent 50%)',
+        'dot-grid':
+          'radial-gradient(circle, rgb(12 18 34 / 0.07) 1px, transparent 1px)',
+      },
+      backgroundSize: {
+        'dot-grid': '24px 24px',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out',
         'slide-up': 'slideUp 0.45s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -67,6 +76,14 @@ export default {
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
         },
       },
     },

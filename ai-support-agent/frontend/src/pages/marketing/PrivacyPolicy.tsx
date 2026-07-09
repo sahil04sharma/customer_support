@@ -1,160 +1,172 @@
-import LegalLayout from '../../components/marketing/LegalLayout';
+import LegalLayout, { LegalCallout, LegalSection } from '../../components/marketing/LegalLayout';
+
+const sections = [
+  { id: 'about', title: 'About SupportDesk' },
+  { id: 'roles', title: 'Who handles what' },
+  { id: 'collect', title: 'What we collect' },
+  { id: 'use', title: 'How we use it' },
+  { id: 'subprocessors', title: 'Third parties' },
+  { id: 'retention', title: 'How long we keep data' },
+  { id: 'security', title: 'Security' },
+  { id: 'rights', title: 'Your rights' },
+  { id: 'transfers', title: 'International transfers' },
+  { id: 'children', title: 'Children' },
+  { id: 'changes', title: 'Updates to this policy' },
+  { id: 'contact', title: 'Contact us' },
+];
 
 export default function PrivacyPolicy() {
   return (
     <LegalLayout
       title="Privacy Policy"
-      description="How SupportDesk collects, uses, and protects personal information."
+      description="How we handle personal information when you use SupportDesk — as a business customer, team member, or visitor to a site with our widget."
       lastUpdated="July 8, 2026"
+      sections={sections}
     >
-      <section>
-        <h2>1. Who we are</h2>
-        <p>
-          SupportDesk (&quot;we&quot;, &quot;us&quot;) provides a software service that helps businesses
-          offer AI-assisted customer support through an embeddable chat widget and team dashboard.
-        </p>
-        <p>
-          This policy describes how we handle information when you create a business account, use our
-          dashboard, or interact with a chat widget embedded on a customer&apos;s website.
-        </p>
-      </section>
+      <LegalCallout variant="important">
+        We don&apos;t sell personal data. We don&apos;t use your customers&apos; chat content to train
+        public AI models.
+      </LegalCallout>
 
-      <section>
-        <h2>2. Roles under GDPR-style frameworks</h2>
+      <LegalSection id="about" title="About SupportDesk">
+        <p>
+          SupportDesk is a customer support platform. Businesses upload documentation, embed a chat
+          widget on their site, and use our dashboard to manage AI-assisted conversations and human
+          handoffs.
+        </p>
+        <p>
+          This policy covers what happens when you sign up for an account, use the dashboard, or
+          chat through a widget on one of our customers&apos; websites.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="roles" title="Who handles what">
+        <p>Data protection law distinguishes between who decides how data is used and who processes it on their behalf:</p>
         <ul>
           <li>
-            <strong>Business customers</strong> (companies that sign up for SupportDesk) are generally
-            the <strong>data controller</strong> for their end-customers&apos; chat data.
+            <strong>Business customers</strong> — the company that signs up for SupportDesk — are
+            usually the <strong>data controller</strong> for their end-customers&apos; chat data.
           </li>
           <li>
-            SupportDesk acts as a <strong>data processor</strong> when handling widget conversations,
-            uploaded documents, and related content on behalf of those businesses.
+            SupportDesk acts as a <strong>data processor</strong> when we store widget conversations,
+            uploaded documents, and related content on their behalf.
           </li>
           <li>
-            For our own account, billing, and service operations, SupportDesk is the{' '}
+            For our own operations — accounts, billing, security logs — SupportDesk is the{' '}
             <strong>data controller</strong>.
           </li>
         </ul>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>3. Information we collect</h2>
-        <h3>Business account holders</h3>
+      <LegalSection id="collect" title="What we collect">
+        <h3>Business accounts</h3>
         <ul>
-          <li>Company name, work email, and password (stored hashed)</li>
+          <li>Company name, work email, and password (stored hashed — never in plain text)</li>
           <li>Dashboard settings, widget configuration, and allowed domains</li>
-          <li>Uploaded knowledge-base documents and derived text chunks / embeddings</li>
-          <li>Support agent names and emails (if you invite team members)</li>
-          <li>Optionally: your own AI provider API keys (encrypted at rest if you enable BYOK)</li>
-          <li>Usage metrics (e.g. AI message counts, token estimates)</li>
+          <li>Knowledge-base files and the text chunks / embeddings we generate from them</li>
+          <li>Support agent names and emails, if you invite team members</li>
+          <li>Your AI provider API keys, if you enable BYOK (encrypted at rest)</li>
+          <li>Usage metrics like AI message counts and token estimates</li>
         </ul>
 
-        <h3>Widget visitors (your customers)</h3>
+        <h3>Widget visitors</h3>
         <ul>
           <li>Chat messages and conversation history</li>
-          <li>Optional name or email if provided in the widget or conversation flow</li>
-          <li>CSAT ratings and feedback if submitted</li>
+          <li>Name or email, only if provided in the widget or conversation flow</li>
+          <li>CSAT ratings and feedback, if submitted</li>
           <li>Technical data: browser origin, session identifiers, and IP-derived rate-limit keys</li>
         </ul>
 
-        <h3>Automatically collected</h3>
+        <h3>Automatic collection</h3>
         <ul>
-          <li>Log data, timestamps, and error diagnostics</li>
-          <li>Authentication tokens stored in your browser (local storage) when signed in</li>
-          <li>Cookie / local-storage consent preference on the marketing site</li>
+          <li>Server logs, timestamps, and error diagnostics</li>
+          <li>Authentication tokens in your browser when signed in to the dashboard</li>
+          <li>Cookie / local-storage consent preference on this marketing site</li>
         </ul>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>4. How we use information</h2>
+      <LegalSection id="use" title="How we use it">
+        <p>We process data to:</p>
         <ul>
-          <li>Provide, secure, and improve the SupportDesk service</li>
+          <li>Run, secure, and improve the SupportDesk service</li>
           <li>Generate AI replies grounded in your uploaded knowledge base</li>
-          <li>Route escalations to human agents and send optional notification emails</li>
+          <li>Route escalations to human agents and send notification emails when configured</li>
           <li>Enforce plan limits, rate limits, and abuse prevention</li>
-          <li>Respond to support requests and legal obligations</li>
+          <li>Respond to support requests and meet legal obligations</li>
         </ul>
-        <p>
-          We do <strong>not</strong> sell personal information. We do not use end-customer chat
-          content to train public foundation models.
-        </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>5. AI and third-party subprocessors</h2>
-        <p>To deliver the service we may send data to:</p>
+      <LegalSection id="subprocessors" title="Third parties">
+        <p>We rely on infrastructure and service providers to deliver SupportDesk:</p>
         <ul>
-          <li><strong>Hosting & database</strong> — e.g. cloud application and Postgres providers</li>
-          <li><strong>AI providers</strong> — e.g. Groq, Google (Gemini), or providers you configure (OpenAI, Anthropic)</li>
-          <li><strong>File storage</strong> — e.g. Cloudinary for uploaded documents and images</li>
-          <li><strong>Cache / rate limiting</strong> — e.g. Upstash Redis</li>
-          <li><strong>Email</strong> — e.g. Resend (transactional emails, when configured)</li>
+          <li><strong>Hosting & database</strong> — cloud application and Postgres providers</li>
+          <li><strong>AI providers</strong> — Groq, Google (Gemini), or providers you configure via BYOK (OpenAI, Anthropic, etc.)</li>
+          <li><strong>File storage</strong> — Cloudinary for uploaded documents and images</li>
+          <li><strong>Cache & rate limiting</strong> — Upstash Redis</li>
+          <li><strong>Email</strong> — Resend for transactional emails, when configured</li>
         </ul>
         <p>
-          When you use <strong>Bring Your Own Key (BYOK)</strong>, AI requests are sent to your chosen
-          provider using your credentials; their privacy policy also applies.
+          If you use <strong>Bring Your Own Key (BYOK)</strong>, AI requests go to your chosen
+          provider using your credentials. Their privacy policy applies to that processing.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>6. Retention</h2>
+      <LegalSection id="retention" title="How long we keep data">
         <p>
-          We retain account and conversation data while your subscription is active and for a reasonable
-          period afterward to allow export, dispute resolution, and legal compliance. You may delete
-          documents and request account deletion by contacting us.
+          We keep account and conversation data while your account is active, plus a reasonable
+          period afterward for export, dispute resolution, and legal compliance. You can delete
+          documents from the dashboard anytime. To close your account entirely, contact us.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>7. Security</h2>
+      <LegalSection id="security" title="Security">
         <p>
-          We use industry-standard measures including TLS in transit, password hashing, tenant
-          isolation, encrypted storage for BYOK API keys, and access controls on dashboard routes.
-          No method of transmission over the internet is 100% secure.
+          We use TLS in transit, password hashing, tenant isolation, encrypted storage for BYOK
+          API keys, and access controls on dashboard routes. No online service can guarantee
+          perfect security, but we take reasonable steps to protect your data.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>8. Your rights</h2>
+      <LegalSection id="rights" title="Your rights">
         <p>
-          Depending on your location, you may have rights to access, correct, delete, or restrict
-          processing of your personal data. Business customers can manage much of their data in the
-          dashboard. Widget visitors should contact the business whose site they used; we will assist
-          controllers with data subject requests where required.
+          Depending on where you live, you may have rights to access, correct, delete, or restrict
+          processing of your personal data. Business customers can manage much of their data directly
+          in the dashboard.
         </p>
-      </section>
-
-      <section>
-        <h2>9. International transfers</h2>
         <p>
-          Our infrastructure and subprocessors may process data in countries other than yours. We rely
-          on appropriate safeguards where required by law.
+          Widget visitors should contact the business whose site they used — they&apos;re the
+          controller for that data. We&apos;ll help our customers respond to data subject requests
+          where required.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>10. Children</h2>
+      <LegalSection id="transfers" title="International transfers">
         <p>
-          SupportDesk is not directed at children under 16. We do not knowingly collect their personal
-          information.
+          Our infrastructure and subprocessors may process data in countries other than yours. Where
+          required by law, we rely on appropriate safeguards for cross-border transfers.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>11. Changes</h2>
+      <LegalSection id="children" title="Children">
         <p>
-          We may update this policy. We will post the new version on this page with an updated date.
-          Material changes may be notified by email to account holders.
+          SupportDesk isn&apos;t directed at children under 16. We don&apos;t knowingly collect their
+          personal information.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>12. Contact</h2>
+      <LegalSection id="changes" title="Updates to this policy">
+        <p>
+          We may update this page from time to time. The date at the top will change when we do.
+          For significant changes, we&apos;ll notify account holders by email.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="contact" title="Contact us">
         <p>
           Privacy questions:{' '}
           <a href="mailto:privacy@supportdesk.app">privacy@supportdesk.app</a>
         </p>
-      </section>
+      </LegalSection>
     </LegalLayout>
   );
 }

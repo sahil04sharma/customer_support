@@ -21,20 +21,19 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-ink-200 bg-white p-4 shadow-card md:bottom-4 md:left-4 md:right-auto md:max-w-md md:rounded-xl md:border">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-ink-200/80 bg-white/95 p-4 shadow-card-hover backdrop-blur-xl md:bottom-5 md:left-5 md:right-auto md:max-w-sm md:rounded-2xl md:border">
       <div className="flex gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-ink-900">Cookies & local storage</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-500">
-            We use essential cookies and local storage for sign-in and dashboard preferences.
-            See our{' '}
+          <p className="text-sm font-semibold text-ink-900">Cookies & local storage</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
+            We use essential storage for sign-in and preferences. Read our{' '}
             <Link to="/data" className="font-medium text-accent-700 hover:underline">
               data notice
-            </Link>
-            .
+            </Link>{' '}
+            for details.
           </p>
-          <button type="button" onClick={accept} className="btn-primary mt-3 text-xs">
-            Accept
+          <button type="button" onClick={accept} className="btn-primary mt-3 px-4 py-2 text-xs">
+            Got it
           </button>
         </div>
         <button

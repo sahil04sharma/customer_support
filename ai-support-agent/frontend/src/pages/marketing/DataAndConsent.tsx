@@ -1,190 +1,227 @@
 import { Link } from 'react-router-dom';
-import LegalLayout from '../../components/marketing/LegalLayout';
+import { Building2, MessageCircle, User } from 'lucide-react';
+import LegalLayout, { LegalCallout, LegalSection } from '../../components/marketing/LegalLayout';
+
+const sections = [
+  { id: 'overview', title: 'Quick overview' },
+  { id: 'responsibility', title: 'Who is responsible' },
+  { id: 'business-data', title: 'Business account data' },
+  { id: 'visitor-data', title: 'Widget visitor data' },
+  { id: 'legal-bases', title: 'Legal bases' },
+  { id: 'registration', title: 'Consent at signup' },
+  { id: 'visitor-consent', title: 'Your visitors' },
+  { id: 'cookies', title: 'Cookies & storage' },
+  { id: 'subprocessors', title: 'Subprocessors' },
+  { id: 'choices', title: 'Your choices' },
+  { id: 'contact', title: 'Contact & DPA' },
+];
 
 export default function DataAndConsent() {
   return (
     <LegalLayout
       title="Data & consent"
-      description="What we collect, why we need it, and how consent works for businesses and end-users."
+      description="A plain-language guide to what SupportDesk collects, why, and what you need to tell your own customers."
       lastUpdated="July 8, 2026"
+      sections={sections}
     >
-      <section>
-        <h2>Overview</h2>
+      <LegalSection id="overview" title="Quick overview">
         <p>
-          This page is a plain-language summary of data practices for SupportDesk. It supplements our{' '}
-          <Link to="/privacy">Privacy Policy</Link> and <Link to="/terms">Terms of Service</Link>.
+          This page summarizes how data flows through SupportDesk. It&apos;s meant to be readable —
+          for the full legal text, see our <Link to="/privacy">Privacy Policy</Link> and{' '}
+          <Link to="/terms">Terms of Service</Link>.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>Who is responsible for what?</h2>
-        <div className="not-prose my-4 overflow-hidden rounded-xl border border-ink-200">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-ink-50 text-xs font-semibold uppercase text-ink-500">
-              <tr>
-                <th className="px-4 py-3">Data subject</th>
-                <th className="px-4 py-3">Controller</th>
-                <th className="px-4 py-3">Processor</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-100">
-              <tr>
-                <td className="px-4 py-3 text-ink-700">Business account holder</td>
-                <td className="px-4 py-3 text-ink-600">SupportDesk</td>
-                <td className="px-4 py-3 text-ink-400">—</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 text-ink-700">Widget visitor / end-customer</td>
-                <td className="px-4 py-3 text-ink-600">Your business (our customer)</td>
-                <td className="px-4 py-3 text-ink-600">SupportDesk</td>
-              </tr>
-            </tbody>
-          </table>
+      <LegalSection id="responsibility" title="Who is responsible">
+        <div className="my-4 grid gap-3 sm:grid-cols-2">
+          <div className="legal-role-card">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900 text-white">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <p className="text-sm font-semibold text-ink-900">You (business customer)</p>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-ink-600">
+              You decide how your visitors&apos; chat data is used. You&apos;re the{' '}
+              <strong className="font-semibold text-ink-800">data controller</strong> for widget
+              conversations.
+            </p>
+          </div>
+          <div className="legal-role-card">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-600 text-white">
+                <MessageCircle className="h-4 w-4" />
+              </div>
+              <p className="text-sm font-semibold text-ink-900">SupportDesk</p>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-ink-600">
+              We process that data on your behalf — storing chats, running AI, routing to agents.
+              We&apos;re the <strong className="font-semibold text-ink-800">data processor</strong>.
+            </p>
+          </div>
         </div>
+
+        <table className="legal-table">
+          <thead>
+            <tr>
+              <th>Who</th>
+              <th>Controller</th>
+              <th>Processor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="font-medium text-ink-800">Business account holder</td>
+              <td>SupportDesk</td>
+              <td className="text-ink-400">—</td>
+            </tr>
+            <tr>
+              <td className="font-medium text-ink-800">Widget visitor</td>
+              <td>Your business</td>
+              <td>SupportDesk</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <LegalCallout variant="important">
+          If you embed our widget, tell your visitors that chats may be processed by AI and stored
+          for support. Link to your own privacy notice.
+        </LegalCallout>
+      </LegalSection>
+
+      <LegalSection id="business-data" title="Business account data">
+        <ul>
+          <li>
+            <strong>Registration</strong> — company name, email, password (hashed, never plain text)
+          </li>
+          <li>
+            <strong>Knowledge base</strong> — uploaded files (PDF, TXT), extracted text, vector embeddings
+          </li>
+          <li>
+            <strong>Configuration</strong> — widget appearance, welcome messages, allowed domains, AI persona
+          </li>
+          <li>
+            <strong>Team</strong> — agent names and emails when you invite support staff
+          </li>
+          <li>
+            <strong>BYOK (optional)</strong> — third-party API keys, encrypted at rest; never shown in full after save
+          </li>
+          <li>
+            <strong>Usage</strong> — message counts, token estimates, document counts for plan limits
+          </li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection id="visitor-data" title="Widget visitor data">
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-ink-200/80 bg-ink-50/40 p-4">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-ink-600 shadow-sm">
+            <User className="h-4 w-4" />
+          </div>
+          <p className="text-xs leading-relaxed text-ink-600">
+            This is data from people chatting on <em>your</em> website through the SupportDesk widget.
+            You control what you ask them for.
+          </p>
+        </div>
+
+        <ul>
+          <li><strong>Chat content</strong> — messages in the conversation thread</li>
+          <li><strong>Identity (optional)</strong> — name or email, if your flow collects it</li>
+          <li><strong>Feedback (optional)</strong> — star rating and short comment after a chat</li>
+          <li><strong>Technical</strong> — website origin, session token, hashed IP for abuse prevention</li>
+        </ul>
+
         <p>
-          If you embed our widget, <strong>you</strong> should tell your visitors that chats may be
-          processed by AI and stored for support purposes, and link to your own privacy notice.
+          We don&apos;t intentionally collect payment cards, government IDs, or health data through the
+          widget. Don&apos;t encourage visitors to submit sensitive data in chat unless you have a
+          lawful basis and proper safeguards.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>Data we collect — business accounts</h2>
+      <LegalSection id="legal-bases" title="Legal bases">
+        <p>Common reasons we process data:</p>
         <ul>
-          <li>
-            <strong>Registration:</strong> company name, email, password (hashed, never stored in plain text)
-          </li>
-          <li>
-            <strong>Knowledge base:</strong> files you upload (PDF, TXT), extracted text, vector embeddings
-          </li>
-          <li>
-            <strong>Configuration:</strong> widget appearance, welcome messages, allowed domains, AI persona settings
-          </li>
-          <li>
-            <strong>Team:</strong> agent names and emails if you invite support staff
-          </li>
-          <li>
-            <strong>BYOK (optional):</strong> third-party API keys you provide — encrypted at rest; never shown in full after save
-          </li>
-          <li>
-            <strong>Usage:</strong> message counts, token estimates, document counts (for plan limits)
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Data we collect — widget visitors</h2>
-        <ul>
-          <li>
-            <strong>Chat content:</strong> messages sent in the conversation thread
-          </li>
-          <li>
-            <strong>Identity (optional):</strong> name or email if the visitor or your flow provides it
-          </li>
-          <li>
-            <strong>Feedback (optional):</strong> star rating and short comment after a chat ends
-          </li>
-          <li>
-            <strong>Technical:</strong> website origin (for domain allowlists), session token, hashed IP for abuse prevention
-          </li>
+          <li><strong>Contract</strong> — needed to provide the service you signed up for</li>
+          <li><strong>Legitimate interests</strong> — security, fraud prevention, service improvement</li>
+          <li><strong>Consent</strong> — where you or visitors opt in (e.g. non-essential cookies, if added later)</li>
         </ul>
         <p>
-          We do not intentionally collect payment cards, government IDs, or health data through the
-          widget. Do not encourage visitors to submit sensitive categories of data in chat unless you
-          have a lawful basis and appropriate safeguards.
+          As a business customer, you determine the correct legal basis for processing your
+          visitors&apos; data.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>Legal bases (examples)</h2>
-        <ul>
-          <li>
-            <strong>Contract:</strong> processing needed to provide the service you signed up for
-          </li>
-          <li>
-            <strong>Legitimate interests:</strong> security, fraud prevention, and service improvement
-          </li>
-          <li>
-            <strong>Consent:</strong> where you or your visitors opt in (e.g. marketing cookies if we add them later)
-          </li>
-        </ul>
-        <p>As a business customer, you must determine the correct basis for processing your visitors&apos; data.</p>
-      </section>
-
-      <section>
-        <h2>Consent at registration</h2>
-        <p>When you create a SupportDesk account, we ask you to confirm that you:</p>
+      <LegalSection id="registration" title="Consent at signup">
+        <p>When you create a SupportDesk account, you confirm that you:</p>
         <ul>
           <li>Agree to our Terms of Service</li>
           <li>Have read and accept our Privacy Policy</li>
           <li>Understand how customer chat data will be processed when you embed the widget</li>
         </ul>
         <p>
-          This is recorded as part of account creation (timestamp in our systems). We do not sell your
-          registration data to third parties.
+          We record this at account creation. We don&apos;t sell your registration data to third parties.
         </p>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>Consent for your website visitors</h2>
-        <p>We recommend your widget or site include a short notice such as:</p>
-        <blockquote>
-          &quot;Chats are handled by an AI assistant and may be reviewed by our support team. See our
-          [Privacy Policy] for how we use chat data.&quot;
-        </blockquote>
+      <LegalSection id="visitor-consent" title="Your visitors">
         <p>
-          You can add similar text to your widget welcome message in Dashboard → Widget settings.
+          Add a short notice to your widget welcome message or site. Something like:
         </p>
-      </section>
+        <div className="legal-code-block">
+          Chats are handled by an AI assistant and may be reviewed by our support team.
+          See our Privacy Policy for how we use chat data.
+        </div>
+        <p>
+          You can edit this in <strong>Dashboard → Widget settings</strong>.
+        </p>
+      </LegalSection>
 
-      <section>
-        <h2>Cookies & local storage</h2>
+      <LegalSection id="cookies" title="Cookies & storage">
         <ul>
           <li>
-            <strong>Marketing site:</strong> consent preference stored in local storage after you accept the banner
+            <strong>This marketing site</strong> — consent preference stored in local storage after you accept the banner
           </li>
           <li>
-            <strong>Dashboard:</strong> authentication tokens and UI preferences in local storage
+            <strong>Dashboard</strong> — authentication tokens and UI preferences in local storage
           </li>
           <li>
-            <strong>Widget:</strong> session identifiers to keep conversations connected; no advertising cookies
+            <strong>Widget</strong> — session identifiers to keep conversations connected; no advertising cookies
           </li>
         </ul>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>Subprocessors</h2>
-        <p>We rely on trusted providers to run the platform, including:</p>
+      <LegalSection id="subprocessors" title="Subprocessors">
+        <p>We use trusted providers to run the platform:</p>
         <ul>
           <li>Cloud hosting and PostgreSQL database</li>
-          <li>AI inference (platform keys or your BYOK provider)</li>
+          <li>AI inference — platform keys or your BYOK provider</li>
           <li>File CDN / storage for uploads</li>
           <li>Redis for caching and rate limits</li>
-          <li>Transactional email (when enabled)</li>
+          <li>Transactional email, when enabled</li>
         </ul>
-        <p>A current list is available on request at <a href="mailto:privacy@supportdesk.app">privacy@supportdesk.app</a>.</p>
-      </section>
+        <p>
+          Request the current subprocessor list at{' '}
+          <a href="mailto:privacy@supportdesk.app">privacy@supportdesk.app</a>.
+        </p>
+      </LegalSection>
 
-      <section>
-        <h2>Your choices</h2>
+      <LegalSection id="choices" title="Your choices">
         <ul>
-          <li><strong>Export:</strong> conversation transcripts from the dashboard</li>
-          <li><strong>Delete:</strong> knowledge-base documents from the dashboard</li>
-          <li><strong>Account closure:</strong> contact us to request deletion of your business account</li>
-          <li><strong>BYOK:</strong> remove your API keys anytime in Dashboard → AI providers</li>
+          <li><strong>Export</strong> — conversation transcripts from the dashboard</li>
+          <li><strong>Delete</strong> — knowledge-base documents from the dashboard</li>
+          <li><strong>Close account</strong> — email us to request full account deletion</li>
+          <li><strong>Remove BYOK keys</strong> — anytime in Dashboard → AI providers</li>
         </ul>
-      </section>
+      </LegalSection>
 
-      <section>
-        <h2>Contact & DPA</h2>
+      <LegalSection id="contact" title="Contact & DPA">
         <p>
           Data protection inquiries:{' '}
           <a href="mailto:privacy@supportdesk.app">privacy@supportdesk.app</a>
         </p>
         <p>
-          Business customers requiring a Data Processing Agreement (DPA) may request a standard template
-          by email.
+          Need a Data Processing Agreement? Email us for a standard DPA template.
         </p>
-      </section>
+      </LegalSection>
     </LegalLayout>
   );
 }
