@@ -1,0 +1,7 @@
+{
+  "name": "supportdesk",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -134,11 +134,12 @@ Restrict origins under **Settings → Allowed domains** (empty = allow all in de
 
 ### Backend (Railway / Render)
 
-1. Set all env vars from `.env.example`.
-2. Build: `npm run build` → Start: `npm start`.
-3. Run migrations: `npx prisma migrate deploy`.
-4. Set `TRUST_PROXY=true`, `NODE_ENV=production`, and strong JWT secrets (32+ chars).
-5. Set `CLIENT_URL` and `ALLOWED_ORIGINS` to your Vercel frontend URL.
+1. Set root directory to `ai-support-agent` (includes both `backend/` and `widget/`).
+2. Set all env vars from `.env.example`.
+3. Build: see `railway.toml` (widget + backend); Start: `cd backend && npm start`.
+4. Run migrations: `npx prisma migrate deploy` (included in Railway start command).
+5. Set `TRUST_PROXY=true`, `NODE_ENV=production`, and strong JWT secrets (32+ chars).
+6. Set `CLIENT_URL` and `ALLOWED_ORIGINS` to your Vercel frontend URL.
 
 ### Frontend (Vercel)
 

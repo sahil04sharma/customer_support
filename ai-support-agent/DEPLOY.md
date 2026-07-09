@@ -50,8 +50,9 @@ git push origin main
 2. Select `customer_support`.
 3. Open the service → **Settings** → **Root Directory** → set to:
    ```
-   ai-support-agent/backend
+   ai-support-agent
    ```
+   > **Important:** Do not use `ai-support-agent/backend`. Railway only uploads the root directory — the widget folder must be included in the build.
 4. **Settings → Networking** → **Generate Domain** (e.g. `your-api.up.railway.app`). Copy this URL.
 
 ### Environment variables
@@ -150,7 +151,7 @@ After adding domains:
 | Problem | Fix |
 |---------|-----|
 | CORS error on login | `CLIENT_URL` must exactly match your Vercel URL (scheme + host, no trailing slash). |
-| `widget.js` 404 | Widget build failed — check Railway build logs; ensure root directory is `ai-support-agent/backend`. |
+| `widget.js` 404 | Widget build failed — check Railway build logs. Root directory must be `ai-support-agent` (not `backend`). |
 | DB connection error | Use Supabase **direct** URL (port 5432), not the pooler, for `DATABASE_URL`. |
 | Migrations fail | Run `CREATE EXTENSION IF NOT EXISTS vector;` in Supabase SQL editor first. |
 | Rate limits not working | Confirm Upstash URL + token are set; redeploy. |
