@@ -8,7 +8,8 @@ export const permissiveCors = cors({
 });
 
 function isAllowedDashboardOrigin(origin: string): boolean {
-  return env.allowedOrigins.includes(origin);
+  const normalized = origin.replace(/\/$/, '');
+  return env.allowedOrigins.some((allowed) => allowed.replace(/\/$/, '') === normalized);
 }
 
 /** Dashboard, auth, and authenticated API — restricted to known frontends. */

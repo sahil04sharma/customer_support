@@ -36,6 +36,15 @@ export function createApp(): Express {
     res.json({ status: 'ok' });
   });
 
+  app.get('/', (_req: Request, res: Response) => {
+    res.json({
+      name: 'SupportDesk API',
+      status: 'ok',
+      health: '/health',
+      widget: '/widget.js',
+    });
+  });
+
   const widgetPath = path.join(__dirname, '../../widget/dist');
 
   // Public embed: open CORS + rate limits

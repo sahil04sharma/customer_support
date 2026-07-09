@@ -17,14 +17,18 @@ function optional(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
 
+function normalizeOrigin(url: string): string {
+  return url.trim().replace(/\/$/, '');
+}
+
 function optionalList(name: string): string[] {
   const raw = process.env[name];
   if (!raw?.trim()) return [];
-  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return raw.split(',').map((s) => normalizeOrigin(s.trim())).filter(Boolean);
 }
 
 const nodeEnv = optional('NODE_ENV', 'development');
-const clientUrl = optional('CLIENT_URL', 'http://localhost:5173');
+const clientUrl = normalizeOrigin(optional('CLIENT_URL', 'http://localhost:5173'));
 const extraOrigins = optionalList('ALLOWED_ORIGINS');
 
 export const env = {
@@ -86,5 +90,6 @@ export function validateEnv(): void {
     if (missing.length > 0) {
       console.warn('[env] Production is missing required environment variables.');
     }
+    console.log(`[env] Allowed dashboard origins (CORS): ${env.allowedOrigins.join(', ')}`);
   }
 }
