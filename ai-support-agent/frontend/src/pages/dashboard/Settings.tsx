@@ -29,20 +29,32 @@ interface ImageFieldProps {
   onChange: (url: string | null) => void;
 }
 
+const MAX_WIDGET_IMAGE_BYTES = 1024 * 1024;
+
 function ImageField({ label, hint, value, type, onChange }: ImageFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   async function handleFile(file: File) {
+    setUploadError('');
+    if (file.size > MAX_WIDGET_IMAGE_BYTES) {
+      setUploadError('Image must be 1 MB or smaller.');
+      return;
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', type);
-      const { data } = await api.post<{ url: string }>('/api/business/widget-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data } = await api.post<{ url: string }>('/api/business/widget-image', formData);
       onChange(data.url);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        'Upload failed. Check Cloudinary settings and try again.';
+      setUploadError(message);
     } finally {
       setUploading(false);
     }
@@ -87,6 +99,10 @@ function ImageField({ label, hint, value, type, onChange }: ImageFieldProps) {
           }}
         />
       </div>
+      {uploadError && <p className="mt-2 text-xs text-red-600">{uploadError}</p>}
+      {value && (
+        <p className="mt-2 text-xs text-zinc-400">Click Save changes below to apply this image on your site.</p>
+      )}
     </div>
   );
 }

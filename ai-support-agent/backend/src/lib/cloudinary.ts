@@ -4,7 +4,7 @@ import { env } from '../config/env';
 
 cloudinary.config({
   cloud_name: env.cloudinary.cloudName,
-  apiKey: env.cloudinary.apiKey,
+  api_key: env.cloudinary.apiKey,
   api_secret: env.cloudinary.apiSecret,
 });
 
@@ -42,6 +42,10 @@ export async function uploadWidgetImage(
   filename: string,
   businessId: string
 ): Promise<string> {
+  if (!env.cloudinary.cloudName || !env.cloudinary.apiKey || !env.cloudinary.apiSecret) {
+    throw new Error('Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.');
+  }
+
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {

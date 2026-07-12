@@ -81,9 +81,14 @@ export async function uploadWidgetImageHandler(req: Request, res: Response): Pro
 
   const businessId = req.auth!.businessId;
   const imageType = widgetImageTypeSchema.parse(req.body.type);
-  const url = await uploadWidgetImage(req.file.buffer, req.file.originalname, businessId);
 
-  res.status(201).json({ url, type: imageType });
+  try {
+    const url = await uploadWidgetImage(req.file.buffer, req.file.originalname, businessId);
+    res.status(201).json({ url, type: imageType });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Image upload failed';
+    throw new AppError(502, message.includes('Cloudinary') ? message : 'Image upload failed. Please try again.');
+  }
 }
 
 export async function getWidgetKey(req: Request, res: Response): Promise<void> {

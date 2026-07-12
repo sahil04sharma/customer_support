@@ -63,9 +63,7 @@ export default function Documents() {
       const formData = new FormData();
       formData.append('file', files[0]);
       try {
-        await api.post('/api/documents/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        await api.post('/api/documents/upload', formData);
         fetchData();
       } finally {
         setUploading(false);
